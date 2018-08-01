@@ -78,7 +78,7 @@ public class KnownXmlType implements StructureOfClass {
         return namespace + "/" + name;
     }
 
-    public Node asXmlTagWithName(String nameToUse, Document doc, SchemaMetadata context) {
+    public Node asXmlTagWithName(String nameToUse, Document doc, SchemaParsingContext context) {
         if (abstractType) {
             System.out.println("ABSTRACT :)");
             return null;

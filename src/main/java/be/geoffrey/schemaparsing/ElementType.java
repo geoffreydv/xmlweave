@@ -45,7 +45,7 @@ public class ElementType {
 
     public Node toXmlNodeWithName(String nameToUse,
                                   Document doc,
-                                  SchemaMetadata context) {
+                                  SchemaParsingContext context) {
 
         // TODO: Add namespace shizzle
 

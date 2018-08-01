@@ -4,7 +4,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class SchemaMetadata {
+public class SchemaParsingContext {
 
     // TODO: ik betwijfel dat elements een namespace hebben.. moet waarschijnlijk weg
 
@@ -18,7 +18,7 @@ public class SchemaMetadata {
 
     private List<String> keysThatRequireBaseClassEnhancement = new ArrayList<>();
 
-    public SchemaMetadata(String filePath, SchemaMetadata previouslyCollectedMetadata) {
+    public SchemaParsingContext(String filePath, SchemaParsingContext previouslyCollectedMetadata) {
 
         this.fileName = normalizeFileName(filePath);
 
@@ -31,12 +31,12 @@ public class SchemaMetadata {
         return Paths.get(filePath).normalize().toString();
     }
 
-    public void addInfoFromOtherSchema(SchemaMetadata schemaMetadata) {
-        this.parsedFiles.addAll(schemaMetadata.parsedFiles);
-        this.keysThatRequireBaseClassEnhancement.addAll(schemaMetadata.keysThatRequireBaseClassEnhancement);
-        this.concreteImplementations.putAll(schemaMetadata.concreteImplementations);
-        this.knownXmlTypes.putAll(schemaMetadata.knownXmlTypes);
-        this.knownElementTypes.putAll(schemaMetadata.knownElementTypes);
+    public void addInfoFromOtherSchema(SchemaParsingContext schemaParsingContext) {
+        this.parsedFiles.addAll(schemaParsingContext.parsedFiles);
+        this.keysThatRequireBaseClassEnhancement.addAll(schemaParsingContext.keysThatRequireBaseClassEnhancement);
+        this.concreteImplementations.putAll(schemaParsingContext.concreteImplementations);
+        this.knownXmlTypes.putAll(schemaParsingContext.knownXmlTypes);
+        this.knownElementTypes.putAll(schemaParsingContext.knownElementTypes);
     }
 
     public void addKnownXmlType(KnownXmlType type) {

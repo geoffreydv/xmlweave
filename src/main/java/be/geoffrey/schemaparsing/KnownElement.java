@@ -37,7 +37,7 @@ public class KnownElement implements StructureOfClass {
         return namespace + "/" + name;
     }
 
-    public Element toXmlTag(Document doc, SchemaMetadata context) {
+    public Element toXmlTag(Document doc, SchemaParsingContext context) {
 
         // TODO: Expand element with basic type logic as well...
 

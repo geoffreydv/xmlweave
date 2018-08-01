@@ -28,14 +28,22 @@ public class NewMain {
 
     public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException, TransformerException {
 
-        File schema = new File("C:\\Users\\geoff\\Desktop\\edelta wsdl compare\\v16\\Aanbieden\\GeefOpdrachtDienst-05.00\\GeefOpdrachtWs.xsd");
+        SchemaFinder sf = new SchemaFinder();
+        sf.build("C:\\Users\\geoff\\Desktop\\edelta wsdl compare\\v16\\");
+        System.out.println(String.join("\n", sf.getFoundSchemas()));
 
-        SchemaMetadata context = parseSchema(schema, null, null);
+        SchemaParsingContext context = null;
 
-        generateXml("http://webservice.geefopdrachtwsdienst-02_00.edelta.mow.vlaanderen.be", "GeefOpdrachtWs", context);
+        for (String schemaPath : sf.getFoundSchemas()) {
+            context = parseSchema(new File(schemaPath), null, context);
+        }
+
+        if(context != null) {
+            generateXml("http://webservice.geefvastleggingenwsdienst-02_00.edelta.mow.vlaanderen.be", "GeefVastleggingenWsResponse", context);
+        }
     }
 
-    private static void generateXml(String ns, String elementName, SchemaMetadata context) throws TransformerException, ParserConfigurationException {
+    private static void generateXml(String ns, String elementName, SchemaParsingContext context) throws TransformerException, ParserConfigurationException {
         NameAndNamespace reference = new NameAndNamespace(elementName, ns);
         KnownElement element = context.getKnownElement(reference);
 
@@ -64,10 +72,10 @@ public class NewMain {
         System.out.println(sw.toString());
     }
 
-    private static SchemaMetadata parseSchema(File schemaFile, String schemaNamespaceOverride,
-                                              SchemaMetadata previouslyCollectedMetadata) throws ParserConfigurationException, IOException, SAXException {
+    private static SchemaParsingContext parseSchema(File schemaFile, String schemaNamespaceOverride,
+                                                    SchemaParsingContext previouslyCollectedMetadata) throws ParserConfigurationException, IOException, SAXException {
 
-        SchemaMetadata context = new SchemaMetadata(schemaFile.getAbsolutePath(), previouslyCollectedMetadata);
+        SchemaParsingContext context = new SchemaParsingContext(schemaFile.getAbsolutePath(), previouslyCollectedMetadata);
 //        System.out.println("Parsing schema: " + context.getFileName());
 
         DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();

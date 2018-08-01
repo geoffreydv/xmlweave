@@ -10,7 +10,7 @@ import java.util.List;
 
 public final class BasicTypeUtil {
 
-    private static final List<String> BASIC_TYPES = Lists.newArrayList("string", "int", "boolean");
+    private static final List<String> BASIC_TYPES = Lists.newArrayList("string", "int", "boolean", "double", "decimal");
 
     private BasicTypeUtil() {
     }
@@ -30,6 +30,10 @@ public final class BasicTypeUtil {
                 return doc.createTextNode("12345");
             case "boolean":
                 return doc.createTextNode("true");
+            case "double":
+                return doc.createTextNode("12345.65432");
+            case "decimal":
+                return doc.createTextNode("12345.65432");
         }
 
         throw new IllegalArgumentException("Unknown basic type: " + type);
