@@ -140,7 +140,10 @@ public class NewMain {
     private static KnownXmlType parseKnownSimpleType(Map<String, String> knownNamespaces, Element simpleTypeElement) {
         String ns = knownNamespaces.get(SCHEMA_NS);
         KnownXmlType thisType = new KnownXmlType(ns, simpleTypeElement.getAttribute("name"));
-        // TODO: Do something with info / base
+        Element restriction = childWithTag(simpleTypeElement, "restriction", knownNamespaces);
+        if(restriction != null) {
+            thisType.setSimpleTypeBase(parse(restriction.getAttribute("base"), knownNamespaces));
+        }
         return thisType;
     }
 

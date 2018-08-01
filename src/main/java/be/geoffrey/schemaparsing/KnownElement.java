@@ -38,6 +38,9 @@ public class KnownElement implements StructureOfClass {
     }
 
     public Element toXmlTag(Document doc, SchemaMetadata context) {
+
+        // TODO: Expand element with basic type logic as well...
+
         Element document = doc.createElementNS(namespace, name);
 
         for (ElementType element : elements) {

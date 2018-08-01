@@ -2,6 +2,7 @@ package be.geoffrey.schemaparsing;
 
 import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 public class ElementType {
@@ -37,22 +38,20 @@ public class ElementType {
     public Node toXmlNode(Document doc, SchemaMetadata context) {
 
         // TODO: Add namespace shizzle
-        switch (type.getName()) {
-            case "string":
-                return doc.createTextNode("BLABLABLA");
-            case "int":
-                return doc.createTextNode("12345");
-            case "boolean":
-                return doc.createTextNode("true");
-            default:
-                KnownXmlType knownType = context.getKnownXmlType(type);
 
-                if (knownType == null) {
-                    System.out.println("NULL");
-                    throw new IllegalArgumentException("Failed");
-                }
+        if (BasicTypeUtil.isBasicType(type)) {
+            Element elementOfType = doc.createElement(this.name);
+            elementOfType.appendChild(BasicTypeUtil.basicTypeNode(type, doc));
+            return elementOfType;
+        } else {
+            KnownXmlType knownType = context.getKnownXmlType(type);
+            // TODO: Replace with "Loop elements"...
+            if (knownType == null) {
+                System.out.println("NULL");
+                throw new IllegalArgumentException("Failed");
+            }
 
-                return knownType.toXmlTag(name, doc, context);
+            return knownType.toXmlTag(name, doc, context);
         }
     }
 }
