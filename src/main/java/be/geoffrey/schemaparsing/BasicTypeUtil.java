@@ -1,6 +1,8 @@
 package be.geoffrey.schemaparsing;
 
+import br.com.six2six.bfgex.RegexGen;
 import com.google.common.collect.Lists;
+import com.mifmif.common.regex.Generex;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -16,14 +18,19 @@ public final class BasicTypeUtil {
     }
 
     public static Node basicTypeNode(NameAndNamespace type, Document doc) {
-        return basicTypeNode(type, doc, new ArrayList<>());
+        return basicTypeNode(type, doc, new ArrayList<>(), null);
     }
 
-    public static Node basicTypeNode(NameAndNamespace type, Document doc, List<String> enumValues) {
+    public static Node basicTypeNode(NameAndNamespace type,
+                                     Document doc,
+                                     List<String> enumValues,
+                                     String regex) {
         switch (type.getName()) {
             case "string":
                 if (!enumValues.isEmpty()) {
                     return doc.createTextNode(enumValues.get(0));
+                } else if(regex != null) {
+                    return doc.createTextNode("REGEXPATTERN");
                 }
                 return doc.createTextNode("anystring_anystring");
             case "int":
@@ -43,9 +50,9 @@ public final class BasicTypeUtil {
         return BASIC_TYPES.contains(type.getName());
     }
 
-    public static Node createBasicTypeElementWithNameAndValue(NameAndNamespace me, NameAndNamespace basicType, Document doc, List<String> enumValues) {
+    public static Node createBasicTypeElementWithNameAndValue(NameAndNamespace me, NameAndNamespace basicType, Document doc, List<String> enumValues, String basedOnRegex) {
         Element elementOfType = doc.createElementNS(me.getNamespace(), me.getName());
-        elementOfType.appendChild(BasicTypeUtil.basicTypeNode(basicType, doc, enumValues));
+        elementOfType.appendChild(BasicTypeUtil.basicTypeNode(basicType, doc, enumValues, basedOnRegex));
         return elementOfType;
     }
 }

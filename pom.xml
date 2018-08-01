@@ -94,6 +94,18 @@
             <version>3.2.3</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.github.mifmif</groupId>
+            <artifactId>generex</artifactId>
+            <version>1.0.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>br.com.six2six</groupId>
+            <artifactId>bfgex</artifactId>
+            <version>1.0</version>
+        </dependency>
+
     </dependencies>
 
 </project>

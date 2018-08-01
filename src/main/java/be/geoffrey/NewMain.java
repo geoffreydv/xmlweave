@@ -30,7 +30,6 @@ public class NewMain {
 
         SchemaFinder sf = new SchemaFinder();
         sf.build("C:\\Users\\geoff\\Desktop\\edelta wsdl compare\\v16\\");
-        System.out.println(String.join("\n", sf.getFoundSchemas()));
 
         SchemaParsingContext context = null;
 
@@ -38,7 +37,7 @@ public class NewMain {
             context = parseSchema(new File(schemaPath), null, context);
         }
 
-        if(context != null) {
+        if (context != null) {
             generateXml("http://webservice.geefvastleggingenwsdienst-02_00.edelta.mow.vlaanderen.be", "GeefVastleggingenWsResponse", context);
         }
     }
@@ -164,15 +163,21 @@ public class NewMain {
     private static KnownXmlType parseKnownSimpleType(Map<String, String> knownNamespaces, Element simpleTypeElement) {
         String ns = knownNamespaces.get(SCHEMA_NS);
         KnownXmlType thisType = new KnownXmlType(ns, simpleTypeElement.getAttribute("name"));
-        Element restriction = childWithTag(simpleTypeElement, "restriction", knownNamespaces);
+        Element restriction = childByTag(simpleTypeElement, "restriction", knownNamespaces);
         if (restriction != null) {
             thisType.setSimpleTypeBase(parse(restriction.getAttribute("base"), knownNamespaces));
 
+            // If it is an enum...
             List<Element> enumValues = childrenWithTag(restriction, "enumeration", knownNamespaces);
             if (enumValues.size() > 0) {
                 for (Element enumValue : enumValues) {
                     thisType.addEnumValue(enumValue.getAttribute("value"));
                 }
+            }
+            // If it is based on a regex...
+            Element pattern = childByTag(restriction, "pattern", knownNamespaces);
+            if(pattern != null) {
+                thisType.setBasedOnRegex(pattern.getAttribute("value"));
             }
         }
         return thisType;
@@ -194,9 +199,9 @@ public class NewMain {
         }
 
         // Collect data about inheritance
-        Element complexContent = childWithTag(complexType, "complexContent", knownNamespaces);
+        Element complexContent = childByTag(complexType, "complexContent", knownNamespaces);
         if (complexContent != null) {
-            Element extension = childWithTag(complexContent, "extension", knownNamespaces);
+            Element extension = childByTag(complexContent, "extension", knownNamespaces);
             if (extension != null) {
                 NameAndNamespace baseClass = parse(extension.getAttribute("base"), knownNamespaces);
                 thisType.setExtensionOf(baseClass);
@@ -235,23 +240,23 @@ public class NewMain {
 
         // TODO: Als dit te gek wordt misschien een recursief zoekding maken
 
-        Element sequenceTag = childWithTag(xmlElementContainingStructure, "sequence", knownNamespaces);
+        Element sequenceTag = childByTag(xmlElementContainingStructure, "sequence", knownNamespaces);
 
         if (sequenceTag != null) {
             return sequenceTag;
         } else {
-            Element complexType = childWithTag(xmlElementContainingStructure, "complexType", knownNamespaces);
+            Element complexType = childByTag(xmlElementContainingStructure, "complexType", knownNamespaces);
             if (complexType != null) {
-                Element sequence = childWithTag(complexType, "sequence", knownNamespaces);
+                Element sequence = childByTag(complexType, "sequence", knownNamespaces);
                 if (sequence != null) {
                     return sequence;
                 }
             } else {
-                Element complexContent = childWithTag(xmlElementContainingStructure, "complexContent", knownNamespaces);
+                Element complexContent = childByTag(xmlElementContainingStructure, "complexContent", knownNamespaces);
                 if (complexContent != null) {
-                    Element extensionElement = childWithTag(complexContent, "extension", knownNamespaces);
+                    Element extensionElement = childByTag(complexContent, "extension", knownNamespaces);
                     if (extensionElement != null) {
-                        Element sequence = childWithTag(extensionElement, "sequence", knownNamespaces);
+                        Element sequence = childByTag(extensionElement, "sequence", knownNamespaces);
                         if (sequence != null) {
                             return sequence;
                         }
@@ -294,7 +299,7 @@ public class NewMain {
         return elements;
     }
 
-    private static Element childWithTag(Element root, String tagName, Map<String, String> knownNamespaces) {
+    private static Element childByTag(Element root, String tagName, Map<String, String> knownNamespaces) {
         List<Element> children = childrenWithTag(root, tagName, knownNamespaces);
 
         if (children.isEmpty()) {
