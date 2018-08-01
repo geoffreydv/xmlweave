@@ -15,20 +15,21 @@ public final class BasicTypeUtil {
     private BasicTypeUtil() {
     }
 
-    public static Node basicTypeNode(NameAndNamespace type, Document doc) {
-        return basicTypeNode(type, doc, new ArrayList<>(), null);
+    public static Node generateContentsOfABasicType(NameAndNamespace type,
+                                                    Document doc) {
+        return generateContentsOfABasicType(type, doc, new ArrayList<>(), null);
     }
 
-    public static Node basicTypeNode(NameAndNamespace type,
-                                     Document doc,
-                                     List<String> enumValues,
-                                     String regex) {
+    public static Node generateContentsOfABasicType(NameAndNamespace type,
+                                                    Document doc,
+                                                    List<String> enumValues,
+                                                    String regex) {
         switch (type.getName()) {
             case "string":
                 if (!enumValues.isEmpty()) {
                     return doc.createTextNode(enumValues.get(0));
                 } else if (regex != null) {
-                    return doc.createTextNode("REGEXPATTERN");
+                    return doc.createTextNode("Something that matches " + regex);
                 }
                 return doc.createTextNode("anystring_anystring");
             case "int":
@@ -51,7 +52,7 @@ public final class BasicTypeUtil {
 
     public static Node createBasicTypeElementWithNameAndValue(NameAndNamespace me, NameAndNamespace basicType, Document doc, List<String> enumValues, String basedOnRegex) {
         Element elementOfType = doc.createElementNS(me.getNamespace(), me.getName());
-        elementOfType.appendChild(BasicTypeUtil.basicTypeNode(basicType, doc, enumValues, basedOnRegex));
+        elementOfType.appendChild(BasicTypeUtil.generateContentsOfABasicType(basicType, doc, enumValues, basedOnRegex));
         return elementOfType;
     }
 }

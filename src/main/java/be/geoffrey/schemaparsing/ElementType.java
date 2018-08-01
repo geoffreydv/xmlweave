@@ -51,7 +51,7 @@ public class ElementType {
 
         if (BasicTypeUtil.isBasicType(type)) {
             Element elementOfType = doc.createElement(nameToUse);
-            elementOfType.appendChild(BasicTypeUtil.basicTypeNode(type, doc));
+            elementOfType.appendChild(BasicTypeUtil.generateContentsOfABasicType(type, doc));
             return elementOfType;
         } else {
 
