@@ -123,14 +123,14 @@ public class SchemaParsingContext {
 
     public KnownElement getKnownElementByElementName(String elementName) {
 
-        List<KnownElement> matches = knownElementTypes.values().stream()
+        Set<KnownElement> matches = knownElementTypes.values().stream()
                 .filter(e -> e.getName().equals(elementName))
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
 
         if (matches.size() == 1) {
-            return matches.get(0);
+            return matches.iterator().next();
         }
 
-        throw new IllegalArgumentException("Could not uniquely identify an element with name " + elementName);
+        throw new IllegalArgumentException("Could not uniquely identify an element with name " + elementName + ". Names found:" + matches.stream().map(e -> e.getNamespace() + "/" + e.getName()).collect(Collectors.toList()));
     }
 }
