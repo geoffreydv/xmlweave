@@ -120,4 +120,17 @@ public class SchemaParsingContext {
     public boolean isSchemaAlreadyParsed(String path) {
         return parsedFiles.contains(normalizeFileName(path));
     }
+
+    public KnownElement getKnownElementByElementName(String elementName) {
+
+        List<KnownElement> matches = knownElementTypes.values().stream()
+                .filter(e -> e.getName().equals(elementName))
+                .collect(Collectors.toList());
+
+        if (matches.size() == 1) {
+            return matches.get(0);
+        }
+
+        throw new IllegalArgumentException("Could not uniquely identify an element with name " + elementName);
+    }
 }

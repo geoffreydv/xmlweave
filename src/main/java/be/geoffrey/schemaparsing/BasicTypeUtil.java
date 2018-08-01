@@ -1,8 +1,6 @@
 package be.geoffrey.schemaparsing;
 
-import br.com.six2six.bfgex.RegexGen;
 import com.google.common.collect.Lists;
-import com.mifmif.common.regex.Generex;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -29,7 +27,7 @@ public final class BasicTypeUtil {
             case "string":
                 if (!enumValues.isEmpty()) {
                     return doc.createTextNode(enumValues.get(0));
-                } else if(regex != null) {
+                } else if (regex != null) {
                     return doc.createTextNode("REGEXPATTERN");
                 }
                 return doc.createTextNode("anystring_anystring");

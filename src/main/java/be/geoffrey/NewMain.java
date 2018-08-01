@@ -1,6 +1,8 @@
 package be.geoffrey;
 
 import be.geoffrey.schemaparsing.*;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
 
@@ -16,6 +18,7 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,8 +31,12 @@ public class NewMain {
 
     public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException, TransformerException {
 
+        String xsdPath = args[0];
+        String elementName = args[1];
+        String resultFile = args[2];
+
         SchemaFinder sf = new SchemaFinder();
-        sf.build("C:\\Users\\geoff\\Desktop\\edelta wsdl compare\\v16\\");
+        sf.build(xsdPath);
 
         SchemaParsingContext context = null;
 
@@ -38,13 +45,21 @@ public class NewMain {
         }
 
         if (context != null) {
-            generateXml("http://webservice.geefvastleggingenwsdienst-02_00.edelta.mow.vlaanderen.be", "GeefVastleggingenWsResponse", context);
+            String resultXml = generateXml(context, null, elementName);
+            FileUtils.writeStringToFile(new File(resultFile), resultXml, StandardCharsets.UTF_8);
         }
     }
 
-    private static void generateXml(String ns, String elementName, SchemaParsingContext context) throws TransformerException, ParserConfigurationException {
-        NameAndNamespace reference = new NameAndNamespace(elementName, ns);
-        KnownElement element = context.getKnownElement(reference);
+    private static String generateXml(SchemaParsingContext context, String ns, String elementName) throws TransformerException, ParserConfigurationException {
+
+        KnownElement element;
+
+        if (StringUtils.isNotBlank(ns)) {
+            NameAndNamespace reference = new NameAndNamespace(elementName, ns);
+            element = context.getKnownElement(reference);
+        } else {
+            element = context.getKnownElementByElementName(elementName);
+        }
 
         DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
@@ -63,12 +78,8 @@ public class NewMain {
         StringWriter sw = new StringWriter();
         StreamResult result = new StreamResult(sw);
 
-        // Output to console for testing
-        // StreamResult result = new StreamResult(System.out);
-
         transformer.transform(source, result);
-
-        System.out.println(sw.toString());
+        return sw.toString();
     }
 
     private static SchemaParsingContext parseSchema(File schemaFile, String schemaNamespaceOverride,
@@ -176,7 +187,7 @@ public class NewMain {
             }
             // If it is based on a regex...
             Element pattern = childByTag(restriction, "pattern", knownNamespaces);
-            if(pattern != null) {
+            if (pattern != null) {
                 thisType.setBasedOnRegex(pattern.getAttribute("value"));
             }
         }
