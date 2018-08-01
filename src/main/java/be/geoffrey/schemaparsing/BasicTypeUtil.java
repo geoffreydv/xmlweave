@@ -10,7 +10,7 @@ import java.util.List;
 
 public final class BasicTypeUtil {
 
-    private static final List<String> BASIC_TYPES = Lists.newArrayList("string", "int", "boolean", "double", "decimal");
+    private static final List<String> BASIC_TYPES = Lists.newArrayList("string", "int", "boolean", "double", "decimal", "integer");
 
     private BasicTypeUtil() {
     }
@@ -32,6 +32,7 @@ public final class BasicTypeUtil {
                 }
                 return doc.createTextNode("anystring_anystring");
             case "int":
+            case "integer":
                 return doc.createTextNode("12345");
             case "boolean":
                 return doc.createTextNode("true");

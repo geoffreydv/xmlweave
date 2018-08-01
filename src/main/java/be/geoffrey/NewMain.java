@@ -19,10 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class NewMain {
@@ -106,10 +103,10 @@ public class NewMain {
 
                 switch (nns.getName()) {
                     case "element":
-                        KnownElement thisElement = parseKnownElement(knownNamespaces, childAsElement);
+                        KnownElement thisElement = parseKnownElement(knownNamespaces, childAsElement, context);
                         context.addKnownElement(thisElement);
                     case "complexType": {
-                        KnownXmlType thisType = parseKnownComplexType(knownNamespaces, childAsElement);
+                        KnownXmlType thisType = parseKnownComplexType(knownNamespaces, childAsElement, context);
 
                         if (thisType.isConcreteImplementationOfAbstract()) {
                             context.indicateElementRequiresInheritanceEnhancement(thisType);
@@ -119,7 +116,7 @@ public class NewMain {
                         break;
                     }
                     case "simpleType": {
-                        KnownXmlType thisType = parseKnownSimpleType(knownNamespaces, childAsElement);
+                        KnownXmlType thisType = parseKnownSimpleType(childAsElement, knownNamespaces);
                         context.addKnownXmlType(thisType);
                         break;
                     }
@@ -171,9 +168,19 @@ public class NewMain {
         return knownNamespaces;
     }
 
-    private static KnownXmlType parseKnownSimpleType(Map<String, String> knownNamespaces, Element simpleTypeElement) {
+    private static KnownXmlType parseKnownSimpleType(Element simpleTypeElement, Map<String, String> knownNamespaces) {
+        return parseKnownSimpleType(simpleTypeElement, simpleTypeElement.getAttribute("name"), knownNamespaces);
+    }
+
+    private static KnownXmlType parseKnownSimpleType(Element simpleTypeElement, String nameOverride, Map<String, String> knownNamespaces) {
+
         String ns = knownNamespaces.get(SCHEMA_NS);
-        KnownXmlType thisType = new KnownXmlType(ns, simpleTypeElement.getAttribute("name"));
+
+        if (StringUtils.isBlank(nameOverride)) {
+            throw new IllegalArgumentException("Simple type has no name, please define one.");
+        }
+
+        KnownXmlType thisType = new KnownXmlType(ns, nameOverride);
         Element restriction = childByTag(simpleTypeElement, "restriction", knownNamespaces);
         if (restriction != null) {
             thisType.setSimpleTypeBase(parse(restriction.getAttribute("base"), knownNamespaces));
@@ -194,16 +201,17 @@ public class NewMain {
         return thisType;
     }
 
-    private static KnownXmlType parseKnownComplexType(Map<String, String> knownNamespaces, Element complexType) {
+    private static KnownXmlType parseKnownComplexType(Map<String, String> knownNamespaces, Element complexType, SchemaParsingContext context) {
 
         // TODO: typename zou wel eens een schema kunnen bevatten, check
 
         String ns = knownNamespaces.get(SCHEMA_NS);
-        KnownXmlType thisType = new KnownXmlType(ns, complexType.getAttribute("name"));
+        String complexTypeName = complexType.getAttribute("name");
+        KnownXmlType thisType = new KnownXmlType(ns, complexTypeName);
         thisType.setAbstractType("true".equals(complexType.getAttribute("abstract")));
 
         // Add known elements
-        List<ElementType> elements = extractXmlElements(knownNamespaces, complexType);
+        List<ElementType> elements = extractXmlElements(knownNamespaces, complexType, context);
 
         for (ElementType element : elements) {
             thisType.addElement(element);
@@ -222,11 +230,11 @@ public class NewMain {
         return thisType;
     }
 
-    private static KnownElement parseKnownElement(Map<String, String> knownNamespaces, Element element) {
+    private static KnownElement parseKnownElement(Map<String, String> knownNamespaces, Element element, SchemaParsingContext context) {
 
         KnownElement thisType = new KnownElement(knownNamespaces.get(SCHEMA_NS), element.getAttribute("name"));
 
-        List<ElementType> elements = extractXmlElements(knownNamespaces, element);
+        List<ElementType> elements = extractXmlElements(knownNamespaces, element, context);
 
         for (ElementType elementType : elements) {
             thisType.addElement(elementType);
@@ -236,7 +244,8 @@ public class NewMain {
     }
 
     private static List<ElementType> extractXmlElements(Map<String, String> knownNamespaces,
-                                                        Element xmlElementContainingStructure) {
+                                                        Element xmlElementContainingStructure,
+                                                        SchemaParsingContext context) {
 
         Element sequenceTag = findSequenceInXmlElement(knownNamespaces, xmlElementContainingStructure);
 
@@ -244,7 +253,7 @@ public class NewMain {
             return new ArrayList<>();
         }
 
-        return loadElementsFromSequenceOfElements(knownNamespaces, sequenceTag);
+        return loadElementsFromSequenceOfElements(knownNamespaces, sequenceTag, context);
     }
 
     private static Element findSequenceInXmlElement(Map<String, String> knownNamespaces, Element xmlElementContainingStructure) {
@@ -280,7 +289,12 @@ public class NewMain {
 
 
     private static List<ElementType> loadElementsFromSequenceOfElements(Map<String, String> knownNamespaces,
-                                                                        Element sequenceTag) {
+                                                                        Element sequenceTag,
+                                                                        SchemaParsingContext context) {
+
+        // TODO: Dit moet eigenlijk een reeks items teruggeven, ipv eentje, die worden dan allemaal toegevoegd in de context
+        // TODO: Try later
+        // TODO: Dit omdat meerdere nieuwe elementen kunnen gedefiniëerd worden in 1 complex type
 
         List<Element> xmlElements = childrenWithTag(sequenceTag, "element", knownNamespaces);
 
@@ -288,7 +302,24 @@ public class NewMain {
                 .map(element -> {
                     String name = element.getAttribute("name");
                     String minOccurs = element.getAttribute("minOccurs");
-                    return new ElementType(name, minOccurs, parse(element.getAttribute("type"), knownNamespaces));
+                    String typeOfElement = element.getAttribute("type");
+
+                    // TODO: complexType kan ook ...
+                    if (StringUtils.isBlank(typeOfElement)) {
+
+                        Element simpleType = childByTag(element, "simpleType", knownNamespaces);
+                        if (simpleType != null) {
+                            // Definitie wordt hier verder uitgewerkt...
+
+                            String randomNameForThisElement = UUID.randomUUID().toString() + "_" + name;
+                            KnownXmlType st = parseKnownSimpleType(simpleType, randomNameForThisElement, knownNamespaces);
+                            context.addKnownXmlType(st);
+
+                            return new ElementType(name, minOccurs, new NameAndNamespace(st.getName(), st.getNamespace()));
+                        }
+                    }
+
+                    return new ElementType(name, minOccurs, parse(typeOfElement, knownNamespaces));
                 })
                 .collect(Collectors.toList());
     }
