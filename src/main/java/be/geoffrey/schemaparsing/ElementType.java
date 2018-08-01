@@ -35,23 +35,26 @@ public class ElementType {
         return type;
     }
 
-    public Node toXmlNode(Document doc, SchemaMetadata context) {
+    public Node toXmlNodeWithName(String nameToUse,
+                                  Document doc,
+                                  SchemaMetadata context) {
 
         // TODO: Add namespace shizzle
 
         if (BasicTypeUtil.isBasicType(type)) {
-            Element elementOfType = doc.createElement(this.name);
+            Element elementOfType = doc.createElement(nameToUse);
             elementOfType.appendChild(BasicTypeUtil.basicTypeNode(type, doc));
             return elementOfType;
         } else {
+
             KnownXmlType knownType = context.getKnownXmlType(type);
             // TODO: Replace with "Loop elements"...
             if (knownType == null) {
                 System.out.println("NULL");
                 throw new IllegalArgumentException("Failed");
             }
-
-            return knownType.toXmlTag(name, doc, context);
+            
+            return knownType.asXmlTagWithName(nameToUse, doc, context);
         }
     }
 }

@@ -12,9 +12,12 @@ public class KnownXmlType implements StructureOfClass {
     private String namespace;
     private String name;
 
+    // Used when this is a complex type
     private List<ElementType> elements = new ArrayList<>();
 
+    // Used when this is a simple type
     private NameAndNamespace simpleTypeBase;
+    private List<String> possibleEnumValues = new ArrayList<>();
 
     public KnownXmlType(String namespace, String name) {
         this.namespace = namespace;
@@ -45,19 +48,21 @@ public class KnownXmlType implements StructureOfClass {
         elements.add(type);
     }
 
+    public void addEnumValue(String value) {
+        possibleEnumValues.add(value);
+    }
+
     public String identity() {
         return namespace + "/" + name;
     }
 
-    public Node toXmlTag(String nameOfElement, Document doc, SchemaMetadata context) {
+    public Node asXmlTagWithName(String nameToUse, Document doc, SchemaMetadata context) {
         if (simpleTypeBase != null) {
-            Element elementOfType = doc.createElementNS(namespace, nameOfElement);
-            elementOfType.appendChild(BasicTypeUtil.basicTypeNode(simpleTypeBase, doc));
-            return elementOfType;
+            return BasicTypeUtil.createBasicTypeElementWithNameAndValue(new NameAndNamespace(nameToUse, namespace), simpleTypeBase, doc, possibleEnumValues);
         } else {
-            Element elementOfType = doc.createElementNS(namespace, nameOfElement);
+            Element elementOfType = doc.createElementNS(namespace, nameToUse);
             for (ElementType element : elements) {
-                elementOfType.appendChild(element.toXmlNode(doc, context));
+                elementOfType.appendChild(element.toXmlNodeWithName(element.getName(), doc, context));
             }
             return elementOfType;
         }

@@ -141,8 +141,15 @@ public class NewMain {
         String ns = knownNamespaces.get(SCHEMA_NS);
         KnownXmlType thisType = new KnownXmlType(ns, simpleTypeElement.getAttribute("name"));
         Element restriction = childWithTag(simpleTypeElement, "restriction", knownNamespaces);
-        if(restriction != null) {
+        if (restriction != null) {
             thisType.setSimpleTypeBase(parse(restriction.getAttribute("base"), knownNamespaces));
+
+            List<Element> enumValues = childrenWithTag(restriction, "enumeration", knownNamespaces);
+            if (enumValues.size() > 0) {
+                for (Element enumValue : enumValues) {
+                    thisType.addEnumValue(enumValue.getAttribute("value"));
+                }
+            }
         }
         return thisType;
     }

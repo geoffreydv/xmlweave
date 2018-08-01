@@ -44,7 +44,7 @@ public class KnownElement implements StructureOfClass {
         Element document = doc.createElementNS(namespace, name);
 
         for (ElementType element : elements) {
-            document.appendChild(element.toXmlNode(doc, context));
+            document.appendChild(element.toXmlNodeWithName(element.getName(), doc, context));
         }
 
         return document;
