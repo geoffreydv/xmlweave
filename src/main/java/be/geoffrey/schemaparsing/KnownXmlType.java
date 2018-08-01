@@ -9,6 +9,8 @@ import java.util.List;
 
 public class KnownXmlType implements StructureOfClass {
 
+    private boolean abstractType;
+    private NameAndNamespace extensionOf;
     private String namespace;
     private String name;
 
@@ -40,8 +42,24 @@ public class KnownXmlType implements StructureOfClass {
         return simpleTypeBase;
     }
 
+    public NameAndNamespace getExtensionOf() {
+        return extensionOf;
+    }
+
+    public void setExtensionOf(NameAndNamespace extensionOf) {
+        this.extensionOf = extensionOf;
+    }
+
     public void setSimpleTypeBase(NameAndNamespace simpleTypeBase) {
         this.simpleTypeBase = simpleTypeBase;
+    }
+
+    public boolean isAbstractType() {
+        return abstractType;
+    }
+
+    public void setAbstractType(boolean abstractType) {
+        this.abstractType = abstractType;
     }
 
     public void addElement(ElementType type) {
@@ -52,17 +70,25 @@ public class KnownXmlType implements StructureOfClass {
         possibleEnumValues.add(value);
     }
 
+    public boolean isConcreteImplementationOfAbstract() {
+        return extensionOf != null;
+    }
+
     public String identity() {
         return namespace + "/" + name;
     }
 
     public Node asXmlTagWithName(String nameToUse, Document doc, SchemaMetadata context) {
-        if (simpleTypeBase != null) {
+        if (abstractType) {
+            System.out.println("ABSTRACT :)");
+            return null;
+        } else if (simpleTypeBase != null) {
             return BasicTypeUtil.createBasicTypeElementWithNameAndValue(new NameAndNamespace(nameToUse, namespace), simpleTypeBase, doc, possibleEnumValues);
         } else {
             Element elementOfType = doc.createElementNS(namespace, nameToUse);
             for (ElementType element : elements) {
-                elementOfType.appendChild(element.toXmlNodeWithName(element.getName(), doc, context));
+                Node childElement = element.toXmlNodeWithName(element.getName(), doc, context);
+                elementOfType.appendChild(childElement);
             }
             return elementOfType;
         }

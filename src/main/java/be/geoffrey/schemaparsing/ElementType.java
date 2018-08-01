@@ -5,6 +5,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
+import java.util.List;
+
 public class ElementType {
 
     private String name;
@@ -21,6 +23,12 @@ public class ElementType {
         }
 
         this.type = type;
+    }
+
+    public ElementType(ElementType elementType) {
+        this.name = elementType.name;
+        this.minOccurs = elementType.minOccurs;
+        this.type = elementType.type;
     }
 
     public String getName() {
@@ -53,8 +61,29 @@ public class ElementType {
                 System.out.println("NULL");
                 throw new IllegalArgumentException("Failed");
             }
-            
+
+            // TODO: Meer keuze-opties
+            if (knownType.isAbstractType()) {
+                System.out.println("HEY");
+                List<KnownXmlType> concreteImplementationChoices = context.getConcreteImplementationsOfBaseClass(knownType.identity());
+
+                if (concreteImplementationChoices.isEmpty()) {
+                    throw new IllegalArgumentException("No implementations were found for abstract class " + knownType.identity());
+                }
+
+                return concreteImplementationChoices.get(0).asXmlTagWithName(nameToUse, doc, context);
+            }
+
             return knownType.asXmlTagWithName(nameToUse, doc, context);
         }
+    }
+
+    @Override
+    public String toString() {
+        return "ElementType{" +
+                "name='" + name + '\'' +
+                ", minOccurs=" + minOccurs +
+                ", type=" + type +
+                '}';
     }
 }

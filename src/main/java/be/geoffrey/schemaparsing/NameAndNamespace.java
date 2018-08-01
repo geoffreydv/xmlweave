@@ -21,4 +21,9 @@ public class NameAndNamespace {
     public String identity() {
         return namespace + "/" + name;
     }
+
+    @Override
+    public String toString() {
+        return identity();
+    }
 }

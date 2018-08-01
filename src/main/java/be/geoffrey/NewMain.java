@@ -16,10 +16,13 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class NewMain {
 
@@ -32,7 +35,6 @@ public class NewMain {
         SchemaMetadata context = parseSchema(schema, null);
 
         generateXml("http://webservice.geefopdrachtwsdienst-02_00.edelta.mow.vlaanderen.be", "GeefOpdrachtWsResponse", context);
-        System.out.println("");
     }
 
     private static void generateXml(String ns, String elementName, SchemaMetadata context) throws TransformerException, ParserConfigurationException {
@@ -66,9 +68,13 @@ public class NewMain {
 
     private static SchemaMetadata parseSchema(File schemaFile, String schemaNamespaceOverride) throws ParserConfigurationException, IOException, SAXException {
 
+        String normalizedFileName = Paths.get(schemaFile.getAbsolutePath()).normalize().toString();
+
+        System.out.println("Parsing schema: " + normalizedFileName);
+
         DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
-        Document document = docBuilder.parse(schemaFile);
+        Document document = docBuilder.parse(normalizedFileName);
 
         Element schema = document.getDocumentElement();
 
@@ -91,6 +97,11 @@ public class NewMain {
                         context.addKnownElement(thisElement);
                     case "complexType": {
                         KnownXmlType thisType = parseKnownComplexType(knownNamespaces, childAsElement);
+
+                        if (thisType.isConcreteImplementationOfAbstract()) {
+                            context.indicateElementRequiresInheritanceEnhancement(thisType);
+                        }
+
                         context.addKnownXmlType(thisType);
                         break;
                     }
@@ -115,6 +126,8 @@ public class NewMain {
                 }
             }
         }
+
+        context.addAllFieldsOfBaseClassesToConcreteImplementations();
 
         return context;
     }
@@ -155,50 +168,102 @@ public class NewMain {
     }
 
     private static KnownXmlType parseKnownComplexType(Map<String, String> knownNamespaces, Element complexType) {
+
         // TODO: typename zou wel eens een schema kunnen bevatten, check
+
         String ns = knownNamespaces.get(SCHEMA_NS);
         KnownXmlType thisType = new KnownXmlType(ns, complexType.getAttribute("name"));
-        parseStructureOfClass(knownNamespaces, complexType, thisType);
+        thisType.setAbstractType("true".equals(complexType.getAttribute("abstract")));
+
+        // Add known elements
+        List<ElementType> elements = extractXmlElements(knownNamespaces, complexType);
+
+        for (ElementType element : elements) {
+            thisType.addElement(element);
+        }
+
+        // Collect data about inheritance
+        Element complexContent = childWithTag(complexType, "complexContent", knownNamespaces);
+        if (complexContent != null) {
+            Element extension = childWithTag(complexContent, "extension", knownNamespaces);
+            if (extension != null) {
+                NameAndNamespace baseClass = parse(extension.getAttribute("base"), knownNamespaces);
+                thisType.setExtensionOf(baseClass);
+            }
+        }
+
         return thisType;
     }
 
     private static KnownElement parseKnownElement(Map<String, String> knownNamespaces, Element element) {
 
         KnownElement thisType = new KnownElement(knownNamespaces.get(SCHEMA_NS), element.getAttribute("name"));
-        parseStructureOfClass(knownNamespaces, element, thisType);
+
+        List<ElementType> elements = extractXmlElements(knownNamespaces, element);
+
+        for (ElementType elementType : elements) {
+            thisType.addElement(elementType);
+        }
 
         return thisType;
     }
 
-    private static void parseStructureOfClass(Map<String, String> knownNamespaces,
-                                              Element xmlElementContainingStructure,
-                                              StructureOfClass structureDefinition) {
+    private static List<ElementType> extractXmlElements(Map<String, String> knownNamespaces,
+                                                        Element xmlElementContainingStructure) {
+
+        Element sequenceTag = findSequenceInXmlElement(knownNamespaces, xmlElementContainingStructure);
+
+        if (sequenceTag == null) {
+            return new ArrayList<>();
+        }
+
+        return loadElementsFromSequenceOfElements(knownNamespaces, sequenceTag);
+    }
+
+    private static Element findSequenceInXmlElement(Map<String, String> knownNamespaces, Element xmlElementContainingStructure) {
+
+        // TODO: Als dit te gek wordt misschien een recursief zoekding maken
 
         Element sequenceTag = childWithTag(xmlElementContainingStructure, "sequence", knownNamespaces);
+
         if (sequenceTag != null) {
-            addStructureBySequenceOfElements(knownNamespaces, structureDefinition, sequenceTag);
+            return sequenceTag;
         } else {
             Element complexType = childWithTag(xmlElementContainingStructure, "complexType", knownNamespaces);
             if (complexType != null) {
                 Element sequence = childWithTag(complexType, "sequence", knownNamespaces);
                 if (sequence != null) {
-                    addStructureBySequenceOfElements(knownNamespaces, structureDefinition, sequence);
+                    return sequence;
+                }
+            } else {
+                Element complexContent = childWithTag(xmlElementContainingStructure, "complexContent", knownNamespaces);
+                if (complexContent != null) {
+                    Element extensionElement = childWithTag(complexContent, "extension", knownNamespaces);
+                    if (extensionElement != null) {
+                        Element sequence = childWithTag(extensionElement, "sequence", knownNamespaces);
+                        if (sequence != null) {
+                            return sequence;
+                        }
+                    }
                 }
             }
         }
+        return null;
     }
 
-    private static void addStructureBySequenceOfElements(Map<String, String> knownNamespaces, StructureOfClass thisType, Element sequenceTag) {
+
+    private static List<ElementType> loadElementsFromSequenceOfElements(Map<String, String> knownNamespaces,
+                                                                        Element sequenceTag) {
+
         List<Element> xmlElements = childrenWithTag(sequenceTag, "element", knownNamespaces);
-        addElementsInfo(thisType, xmlElements, knownNamespaces);
-    }
 
-    private static void addElementsInfo(StructureOfClass thisType, List<Element> xmlElements, Map<String, String> knownNamespaces) {
-        for (Element xmlElement : xmlElements) {
-            String name = xmlElement.getAttribute("name");
-            String minOccurs = xmlElement.getAttribute("minOccurs");
-            thisType.addElement(new ElementType(name, minOccurs, parse(xmlElement.getAttribute("type"), knownNamespaces)));
-        }
+        return xmlElements.stream()
+                .map(element -> {
+                    String name = element.getAttribute("name");
+                    String minOccurs = element.getAttribute("minOccurs");
+                    return new ElementType(name, minOccurs, parse(element.getAttribute("type"), knownNamespaces));
+                })
+                .collect(Collectors.toList());
     }
 
     private static List<Element> childrenWithTag(Element root, String tagName, Map<String, String> knownNamespaces) {
