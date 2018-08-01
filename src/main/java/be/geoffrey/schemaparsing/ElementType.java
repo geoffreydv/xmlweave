@@ -63,14 +63,17 @@ public class ElementType {
             }
 
             // TODO: Meer keuze-opties
+            // TODO: Niet alleen als het abstract is... ook gewoon.. ALTIJD
             if (knownType.isAbstractType()) {
-                List<KnownXmlType> concreteImplementationChoices = context.getConcreteImplementationsOfBaseClass(knownType.identity());
+                List<KnownXmlType> concreteImplementationChoices = context.getExtensionsOfBaseClass(knownType.identity());
 
                 if (concreteImplementationChoices.isEmpty()) {
                     throw new IllegalArgumentException("No implementations were found for abstract class " + knownType.identity());
                 }
 
-                return concreteImplementationChoices.get(0).asXmlTagWithName(nameToUse, doc, context);
+                KnownXmlType concreteImplementationChoice = concreteImplementationChoices.get(0);
+                System.out.println("A choice was made here to select " + concreteImplementationChoice.getName() + " as the implementation for " + nameToUse);
+                return concreteImplementationChoice.asXmlTagWithName(nameToUse, doc, context);
             }
 
             return knownType.asXmlTagWithName(nameToUse, doc, context);

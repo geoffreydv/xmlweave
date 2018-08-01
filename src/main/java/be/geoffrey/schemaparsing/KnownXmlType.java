@@ -69,15 +69,11 @@ public class KnownXmlType implements StructureOfClass {
         this.abstractType = abstractType;
     }
 
-    public void addElement(ElementType type) {
-        elements.add(type);
-    }
-
     public void addEnumValue(String value) {
         possibleEnumValues.add(value);
     }
 
-    public boolean isConcreteImplementationOfAbstract() {
+    public boolean isExtensionOfOtherBaseType() {
         return extensionOf != null;
     }
 
@@ -99,5 +95,13 @@ public class KnownXmlType implements StructureOfClass {
             }
             return elementOfType;
         }
+    }
+
+    public void addElement(ElementType type) {
+        elements.add(type);
+    }
+
+    public void addAllElementsAtBeginning(List<ElementType> elements) {
+        this.elements.addAll(0, elements);
     }
 }

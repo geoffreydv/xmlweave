@@ -12,11 +12,12 @@ public class SchemaParsingContext {
 
     private Map<String, KnownXmlType> knownXmlTypes = new HashMap<>();
     private Map<String, KnownElement> knownElementTypes = new HashMap<>();
-    private Map<String, List<String>> concreteImplementations = new HashMap<>();
+    // TODO: Make a "CONCRETE extension of base class" (multiple levels of inheritance nesting with abstracts)
+    private Map<String, List<String>> extensionsOfBaseClass = new HashMap<>();
 
     private Set<String> parsedFiles = new HashSet<>();
 
-    private List<String> keysThatRequireBaseClassEnhancement = new ArrayList<>();
+    private Set<String> classesThatRequireAddingBaseFields = new HashSet<>();
 
     public SchemaParsingContext(String filePath, SchemaParsingContext previouslyCollectedMetadata) {
 
@@ -33,8 +34,8 @@ public class SchemaParsingContext {
 
     public void addInfoFromOtherSchema(SchemaParsingContext schemaParsingContext) {
         this.parsedFiles.addAll(schemaParsingContext.parsedFiles);
-        this.keysThatRequireBaseClassEnhancement.addAll(schemaParsingContext.keysThatRequireBaseClassEnhancement);
-        this.concreteImplementations.putAll(schemaParsingContext.concreteImplementations);
+        this.classesThatRequireAddingBaseFields.addAll(schemaParsingContext.classesThatRequireAddingBaseFields);
+        this.extensionsOfBaseClass.putAll(schemaParsingContext.extensionsOfBaseClass);
         this.knownXmlTypes.putAll(schemaParsingContext.knownXmlTypes);
         this.knownElementTypes.putAll(schemaParsingContext.knownElementTypes);
     }
@@ -49,14 +50,15 @@ public class SchemaParsingContext {
 
     public void indicateElementRequiresInheritanceEnhancement(KnownXmlType thisType) {
 
-        keysThatRequireBaseClassEnhancement.add(thisType.identity());
+        classesThatRequireAddingBaseFields.add(thisType.identity());
 
         String baseClassIdentity = thisType.getExtensionOf().identity();
-        if (!concreteImplementations.containsKey(baseClassIdentity)) {
-            concreteImplementations.put(baseClassIdentity, new ArrayList<>());
+
+        if (!extensionsOfBaseClass.containsKey(baseClassIdentity)) {
+            extensionsOfBaseClass.put(baseClassIdentity, new ArrayList<>());
         }
 
-        this.concreteImplementations.get(baseClassIdentity).add(thisType.identity());
+        this.extensionsOfBaseClass.get(baseClassIdentity).add(thisType.identity());
     }
 
     public KnownElement getKnownElement(NameAndNamespace ns) {
@@ -67,9 +69,9 @@ public class SchemaParsingContext {
         return knownXmlTypes.get(ns.identity());
     }
 
-    public List<KnownXmlType> getConcreteImplementationsOfBaseClass(String id) {
+    public List<KnownXmlType> getExtensionsOfBaseClass(String id) {
 
-        List<String> concreteImplementationReferences = concreteImplementations.get(id);
+        List<String> concreteImplementationReferences = extensionsOfBaseClass.get(id);
 
         if (concreteImplementationReferences == null) {
             return new ArrayList<>();
@@ -83,11 +85,21 @@ public class SchemaParsingContext {
                 .collect(Collectors.toList());
     }
 
+    public boolean needsInheritanceEnhancement() {
+        return !classesThatRequireAddingBaseFields.isEmpty();
+    }
+
     public void addAllFieldsOfBaseClassesToConcreteImplementations() {
 
-        List<String> remainingKeys = new ArrayList<>();
+        // TODO: Add a while and make sure it never crashes (definitions in other files etc)
 
-        for (String key : keysThatRequireBaseClassEnhancement) {
+        if(classesThatRequireAddingBaseFields.isEmpty()) {
+            return;
+        }
+
+        Set<String> remainingKeys = new HashSet<>(classesThatRequireAddingBaseFields);
+
+        for (String key : classesThatRequireAddingBaseFields) {
             // TODO: Add Elements as well?
             KnownXmlType xmlTypeToEnhance = knownXmlTypes.get(key);
 
@@ -96,17 +108,17 @@ public class SchemaParsingContext {
 
             if (baseClass != null) {
 
-                for (ElementType elementType : baseClass.getElements()) {
-                    xmlTypeToEnhance.addElement(new ElementType(elementType));
+                // Only add elements once the base class is resolve itself (to support nested inheritance)
+                if(!classesThatRequireAddingBaseFields.contains(baseClass.identity())) {
+                    xmlTypeToEnhance.addAllElementsAtBeginning(baseClass.getElements().stream()
+                            .map(ElementType::new)
+                            .collect(Collectors.toList()));
+                    remainingKeys.remove(key);
                 }
-
-//                System.out.println("Successfully enhanced " + xmlTypeToEnhance.getName() + ", loaded " + baseClass.getElements().size() + " extra fields from base class");
-            } else {
-                remainingKeys.add(key);
             }
         }
 
-        this.keysThatRequireBaseClassEnhancement = remainingKeys;
+        this.classesThatRequireAddingBaseFields = remainingKeys;
     }
 
     public void indicateFileParsingComplete() {
@@ -132,5 +144,18 @@ public class SchemaParsingContext {
         }
 
         throw new IllegalArgumentException("Could not uniquely identify an element with name " + elementName + ". Names found:" + matches.stream().map(e -> e.getNamespace() + "/" + e.getName()).collect(Collectors.toList()));
+    }
+
+    public KnownXmlType getKnownTypeByTypeName(String typeName) {
+
+        Set<KnownXmlType> matches = knownXmlTypes.values().stream()
+                .filter(e -> e.getName().equals(typeName))
+                .collect(Collectors.toSet());
+
+        if (matches.size() == 1) {
+            return matches.iterator().next();
+        }
+
+        throw new IllegalArgumentException("Could not uniquely identify a type with name " + typeName + ". Names found:" + matches.stream().map(e -> e.getNamespace() + "/" + e.getName()).collect(Collectors.toList()));
     }
 }

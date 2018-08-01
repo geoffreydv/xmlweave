@@ -28,6 +28,13 @@ public class NewMain {
 
     public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException, TransformerException {
 
+        // TODO: Support switching concrete classes with implementation
+        // TODO: Prevent stackoverflows
+        // TODO: XS:ANY support
+        // TODO: XS:Choice support
+        // TODO: Think about "Element", it shouldn't be a different thing, only a reference to a type
+        // TODO: Add caching metadata to speed up generation
+
         String xsdPath = args[0];
         String elementName = args[1];
         String resultFile = args[2];
@@ -39,6 +46,11 @@ public class NewMain {
 
         for (String schemaPath : sf.getFoundSchemas()) {
             context = parseSchema(new File(schemaPath), null, context);
+
+            while(context.needsInheritanceEnhancement()) {
+                context.addAllFieldsOfBaseClassesToConcreteImplementations();
+            }
+
         }
 
         if (context != null) {
@@ -108,7 +120,7 @@ public class NewMain {
                     case "complexType": {
                         KnownXmlType thisType = parseKnownComplexType(knownNamespaces, childAsElement, context);
 
-                        if (thisType.isConcreteImplementationOfAbstract()) {
+                        if (thisType.isExtensionOfOtherBaseType()) {
                             context.indicateElementRequiresInheritanceEnhancement(thisType);
                         }
 
@@ -144,9 +156,7 @@ public class NewMain {
             }
         }
 
-        context.addAllFieldsOfBaseClassesToConcreteImplementations();
         context.indicateFileParsingComplete();
-
         return context;
     }
 
