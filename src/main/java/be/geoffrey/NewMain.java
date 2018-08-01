@@ -34,6 +34,7 @@ public class NewMain {
         // TODO: XS:Choice support
         // TODO: Think about "Element", it shouldn't be a different thing, only a reference to a type
         // TODO: Add caching metadata to speed up generation
+        // TODO: Correct namespace handling (define at top)
 
         String xsdPath = args[0];
         String elementName = args[1];
@@ -50,7 +51,6 @@ public class NewMain {
             while(context.needsInheritanceEnhancement()) {
                 context.addAllFieldsOfBaseClassesToConcreteImplementations();
             }
-
         }
 
         if (context != null) {

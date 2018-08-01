@@ -82,9 +82,9 @@ public class KnownXmlType implements StructureOfClass {
     }
 
     public Node asXmlTagWithName(String nameToUse, Document doc, SchemaParsingContext context) {
+
         if (abstractType) {
-            System.out.println("ABSTRACT :)");
-            return null;
+            throw new IllegalArgumentException("Trying to create an element of an abstract type...");
         } else if (simpleTypeBase != null) {
             return BasicTypeUtil.createBasicTypeElementWithNameAndValue(new NameAndNamespace(nameToUse, namespace), simpleTypeBase, doc, possibleEnumValues, basedOnRegex);
         } else {

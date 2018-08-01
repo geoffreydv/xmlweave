@@ -5,7 +5,9 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class ElementType {
 
@@ -47,8 +49,6 @@ public class ElementType {
                                   Document doc,
                                   SchemaParsingContext context) {
 
-        // TODO: Add namespace shizzle
-
         if (BasicTypeUtil.isBasicType(type)) {
             Element elementOfType = doc.createElement(nameToUse);
             elementOfType.appendChild(BasicTypeUtil.generateContentsOfABasicType(type, doc));
@@ -63,21 +63,42 @@ public class ElementType {
             }
 
             // TODO: Meer keuze-opties
-            // TODO: Niet alleen als het abstract is... ook gewoon.. ALTIJD
-            if (knownType.isAbstractType()) {
-                List<KnownXmlType> concreteImplementationChoices = context.getExtensionsOfBaseClass(knownType.identity());
+            Set<KnownXmlType> concreteImplementationChoices = findConcreteImplementationCandidates(context, knownType);
 
-                if (concreteImplementationChoices.isEmpty()) {
+            if (!concreteImplementationChoices.isEmpty()) {
+                if (knownType.isAbstractType()) {
+                    KnownXmlType concreteImplementationChoice = concreteImplementationChoices.iterator().next();
+                    System.out.println("A choice was made here to select " + concreteImplementationChoice.getName() + " as the implementation for abstract type " + nameToUse);
+                    System.out.println("\tAll choices are: " + concreteImplementationChoices.stream().map(KnownXmlType::getName).collect(Collectors.toList()));
+                    return concreteImplementationChoice.asXmlTagWithName(nameToUse, doc, context);
+                } else {
+                    // TODO: We CAN return this object, or one of its extensions, enable a choice here as well
+                    System.out.println("A choice was made here to select " + knownType.getName() + " as the implementation for " + nameToUse + " but a more specific class can be selected");
+                    System.out.println("\tAll choices are: " + concreteImplementationChoices.stream().map(KnownXmlType::getName).collect(Collectors.toList()));
+                    return knownType.asXmlTagWithName(nameToUse, doc, context);
+                }
+            } else {
+                if (knownType.isAbstractType()) {
                     throw new IllegalArgumentException("No implementations were found for abstract class " + knownType.identity());
                 }
-
-                KnownXmlType concreteImplementationChoice = concreteImplementationChoices.get(0);
-                System.out.println("A choice was made here to select " + concreteImplementationChoice.getName() + " as the implementation for " + nameToUse);
-                return concreteImplementationChoice.asXmlTagWithName(nameToUse, doc, context);
             }
 
             return knownType.asXmlTagWithName(nameToUse, doc, context);
         }
+    }
+
+    private Set<KnownXmlType> findConcreteImplementationCandidates(SchemaParsingContext context,
+                                                                   KnownXmlType base) {
+
+        Set<KnownXmlType> candidates = context.getExtensionsOfBaseClass(base.identity());
+        Set<KnownXmlType> allDiscovered = new HashSet<>(candidates);
+        // Keep looping down the hierarchy until all of the concrete classes are discovered
+
+        for (KnownXmlType concreteClass : candidates) {
+            allDiscovered.addAll(findConcreteImplementationCandidates(context, concreteClass));
+        }
+
+        return allDiscovered;
     }
 
     @Override

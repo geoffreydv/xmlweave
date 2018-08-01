@@ -1,7 +1,10 @@
 package be.geoffrey.schemaparsing;
 
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class SchemaParsingContext {
@@ -13,7 +16,7 @@ public class SchemaParsingContext {
     private Map<String, KnownXmlType> knownXmlTypes = new HashMap<>();
     private Map<String, KnownElement> knownElementTypes = new HashMap<>();
     // TODO: Make a "CONCRETE extension of base class" (multiple levels of inheritance nesting with abstracts)
-    private Map<String, List<String>> extensionsOfBaseClass = new HashMap<>();
+    private Map<String, Set<String>> extensionsOfBaseClass = new HashMap<>();
 
     private Set<String> parsedFiles = new HashSet<>();
 
@@ -55,7 +58,7 @@ public class SchemaParsingContext {
         String baseClassIdentity = thisType.getExtensionOf().identity();
 
         if (!extensionsOfBaseClass.containsKey(baseClassIdentity)) {
-            extensionsOfBaseClass.put(baseClassIdentity, new ArrayList<>());
+            extensionsOfBaseClass.put(baseClassIdentity, new HashSet<>());
         }
 
         this.extensionsOfBaseClass.get(baseClassIdentity).add(thisType.identity());
@@ -69,12 +72,12 @@ public class SchemaParsingContext {
         return knownXmlTypes.get(ns.identity());
     }
 
-    public List<KnownXmlType> getExtensionsOfBaseClass(String id) {
+    public Set<KnownXmlType> getExtensionsOfBaseClass(String id) {
 
-        List<String> concreteImplementationReferences = extensionsOfBaseClass.get(id);
+        Set<String> concreteImplementationReferences = extensionsOfBaseClass.get(id);
 
         if (concreteImplementationReferences == null) {
-            return new ArrayList<>();
+            return new HashSet<>();
         }
 
         // TODO: Think if also needed for elems?
@@ -82,7 +85,7 @@ public class SchemaParsingContext {
         return concreteImplementationReferences
                 .stream()
                 .map(key -> knownXmlTypes.get(key))
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
     }
 
     public boolean needsInheritanceEnhancement() {
@@ -93,7 +96,7 @@ public class SchemaParsingContext {
 
         // TODO: Add a while and make sure it never crashes (definitions in other files etc)
 
-        if(classesThatRequireAddingBaseFields.isEmpty()) {
+        if (classesThatRequireAddingBaseFields.isEmpty()) {
             return;
         }
 
@@ -109,7 +112,7 @@ public class SchemaParsingContext {
             if (baseClass != null) {
 
                 // Only add elements once the base class is resolve itself (to support nested inheritance)
-                if(!classesThatRequireAddingBaseFields.contains(baseClass.identity())) {
+                if (!classesThatRequireAddingBaseFields.contains(baseClass.identity())) {
                     xmlTypeToEnhance.addAllElementsAtBeginning(baseClass.getElements().stream()
                             .map(ElementType::new)
                             .collect(Collectors.toList()));
