@@ -16,8 +16,6 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,11 +28,11 @@ public class NewMain {
 
     public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException, TransformerException {
 
-        File schema = new File("C:\\Users\\geoff\\Desktop\\edelta wsdl compare\\v16\\Aanbieden\\GeefOpdrachtDienst-05.00\\GeefOpdrachtWsResponse.xsd");
+        File schema = new File("C:\\Users\\geoff\\Desktop\\edelta wsdl compare\\v16\\Aanbieden\\GeefOpdrachtDienst-05.00\\GeefOpdrachtWs.xsd");
 
-        SchemaMetadata context = parseSchema(schema, null);
+        SchemaMetadata context = parseSchema(schema, null, null);
 
-        generateXml("http://webservice.geefopdrachtwsdienst-02_00.edelta.mow.vlaanderen.be", "GeefOpdrachtWsResponse", context);
+        generateXml("http://webservice.geefopdrachtwsdienst-02_00.edelta.mow.vlaanderen.be", "GeefOpdrachtWs", context);
     }
 
     private static void generateXml(String ns, String elementName, SchemaMetadata context) throws TransformerException, ParserConfigurationException {
@@ -66,20 +64,17 @@ public class NewMain {
         System.out.println(sw.toString());
     }
 
-    private static SchemaMetadata parseSchema(File schemaFile, String schemaNamespaceOverride) throws ParserConfigurationException, IOException, SAXException {
+    private static SchemaMetadata parseSchema(File schemaFile, String schemaNamespaceOverride,
+                                              SchemaMetadata previouslyCollectedMetadata) throws ParserConfigurationException, IOException, SAXException {
 
-        String normalizedFileName = Paths.get(schemaFile.getAbsolutePath()).normalize().toString();
-
-        System.out.println("Parsing schema: " + normalizedFileName);
+        SchemaMetadata context = new SchemaMetadata(schemaFile.getAbsolutePath(), previouslyCollectedMetadata);
+//        System.out.println("Parsing schema: " + context.getFileName());
 
         DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
-        Document document = docBuilder.parse(normalizedFileName);
+        Document document = docBuilder.parse(context.getFileName());
 
         Element schema = document.getDocumentElement();
-
-        SchemaMetadata context = new SchemaMetadata();
-
         Map<String, String> knownNamespaces = collectNamespacesDefinedInSchema(schemaNamespaceOverride, schema);
 
         NodeList children = schema.getChildNodes();
@@ -113,14 +108,21 @@ public class NewMain {
                     case "include": {
                         String schemaLocation = childAsElement.getAttribute("schemaLocation");
                         File includedFileReference = new File(schemaFile.getParentFile(), schemaLocation);
-                        context.addInfoFromOtherSchema(parseSchema(includedFileReference, null));
+
+                        if (!context.isSchemaAlreadyParsed(includedFileReference.getAbsolutePath())) {
+                            context.addInfoFromOtherSchema(parseSchema(includedFileReference, null, context));
+                        }
                         break;
                     }
                     case "import": {
                         String schemaLocation = childAsElement.getAttribute("schemaLocation");
                         String overrideNs = childAsElement.getAttribute("namespace");
                         File includedFileReference = new File(schemaFile.getParentFile(), schemaLocation);
-                        context.addInfoFromOtherSchema(parseSchema(includedFileReference, overrideNs));
+
+                        if (!context.isSchemaAlreadyParsed(includedFileReference.getAbsolutePath())) {
+                            context.addInfoFromOtherSchema(parseSchema(includedFileReference, overrideNs, context));
+                        }
+
                         break;
                     }
                 }
@@ -128,6 +130,7 @@ public class NewMain {
         }
 
         context.addAllFieldsOfBaseClassesToConcreteImplementations();
+        context.indicateFileParsingComplete();
 
         return context;
     }

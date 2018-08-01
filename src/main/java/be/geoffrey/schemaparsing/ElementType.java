@@ -64,7 +64,6 @@ public class ElementType {
 
             // TODO: Meer keuze-opties
             if (knownType.isAbstractType()) {
-                System.out.println("HEY");
                 List<KnownXmlType> concreteImplementationChoices = context.getConcreteImplementationsOfBaseClass(knownType.identity());
 
                 if (concreteImplementationChoices.isEmpty()) {

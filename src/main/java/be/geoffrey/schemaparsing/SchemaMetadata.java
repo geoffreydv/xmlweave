@@ -1,5 +1,6 @@
 package be.geoffrey.schemaparsing;
 
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -7,23 +8,35 @@ public class SchemaMetadata {
 
     // TODO: ik betwijfel dat elements een namespace hebben.. moet waarschijnlijk weg
 
+    private String fileName;
+
     private Map<String, KnownXmlType> knownXmlTypes = new HashMap<>();
     private Map<String, KnownElement> knownElementTypes = new HashMap<>();
     private Map<String, List<String>> concreteImplementations = new HashMap<>();
 
-    private Set<String> alreadyParsedSchemas = new HashSet<>();
+    private Set<String> parsedFiles = new HashSet<>();
 
     private List<String> keysThatRequireBaseClassEnhancement = new ArrayList<>();
 
+    public SchemaMetadata(String filePath, SchemaMetadata previouslyCollectedMetadata) {
+
+        this.fileName = normalizeFileName(filePath);
+
+        if (previouslyCollectedMetadata != null) {
+            addInfoFromOtherSchema(previouslyCollectedMetadata);
+        }
+    }
+
+    private String normalizeFileName(String filePath) {
+        return Paths.get(filePath).normalize().toString();
+    }
+
     public void addInfoFromOtherSchema(SchemaMetadata schemaMetadata) {
-        this.alreadyParsedSchemas.addAll(schemaMetadata.alreadyParsedSchemas);
+        this.parsedFiles.addAll(schemaMetadata.parsedFiles);
         this.keysThatRequireBaseClassEnhancement.addAll(schemaMetadata.keysThatRequireBaseClassEnhancement);
         this.concreteImplementations.putAll(schemaMetadata.concreteImplementations);
         this.knownXmlTypes.putAll(schemaMetadata.knownXmlTypes);
         this.knownElementTypes.putAll(schemaMetadata.knownElementTypes);
-    }
-
-    public SchemaMetadata() {
     }
 
     public void addKnownXmlType(KnownXmlType type) {
@@ -87,12 +100,24 @@ public class SchemaMetadata {
                     xmlTypeToEnhance.addElement(new ElementType(elementType));
                 }
 
-                System.out.println("Successfully enhanced " + xmlTypeToEnhance.getName() + ", loaded " + baseClass.getElements().size() + " extra fields from base class");
+//                System.out.println("Successfully enhanced " + xmlTypeToEnhance.getName() + ", loaded " + baseClass.getElements().size() + " extra fields from base class");
             } else {
                 remainingKeys.add(key);
             }
         }
 
         this.keysThatRequireBaseClassEnhancement = remainingKeys;
+    }
+
+    public void indicateFileParsingComplete() {
+        parsedFiles.add(this.fileName);
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public boolean isSchemaAlreadyParsed(String path) {
+        return parsedFiles.contains(normalizeFileName(path));
     }
 }
