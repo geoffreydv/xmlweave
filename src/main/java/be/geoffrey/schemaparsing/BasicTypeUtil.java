@@ -29,7 +29,7 @@ public final class BasicTypeUtil {
                 if (!enumValues.isEmpty()) {
                     return doc.createTextNode(enumValues.get(0));
                 } else if (regex != null) {
-                    return doc.createTextNode("Something that matches " + regex);
+                    return doc.createTextNode("Something that matches regex: " + regex);
                 }
                 return doc.createTextNode("anystring_anystring");
             case "int":

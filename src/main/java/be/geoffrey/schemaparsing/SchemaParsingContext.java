@@ -14,7 +14,7 @@ public class SchemaParsingContext {
     private String fileName;
 
     private Map<String, NamedStructure> knownNamedStructures = new HashMap<>();
-    private Map<String, XmlTag> knownElementTypes = new HashMap<>();
+    private Map<String, XmlElement> knownElementTypes = new HashMap<>();
     // TODO: Make a "CONCRETE extension of base class" (multiple levels of inheritance nesting with abstracts)
     private Map<String, Set<String>> extensionsOfBaseClass = new HashMap<>();
 
@@ -47,7 +47,7 @@ public class SchemaParsingContext {
         this.knownNamedStructures.put(type.identity(), type);
     }
 
-    public void addKnownRootElement(XmlTag element) {
+    public void addKnownRootElement(XmlElement element) {
         this.knownElementTypes.put(element.identity(), element);
     }
 
@@ -64,11 +64,11 @@ public class SchemaParsingContext {
         this.extensionsOfBaseClass.get(baseClassIdentity).add(thisType.identity());
     }
 
-    public XmlTag getKnownElement(NameAndNamespace ns) {
+    public XmlElement getKnownElement(NameAndNamespace ns) {
         return knownElementTypes.get(ns.identity());
     }
 
-    public NamedStructure getKnownXmlType(NameAndNamespace ns) {
+    public NamedStructure getKnownXmlStructure(NameAndNamespace ns) {
         return knownNamedStructures.get(ns.identity());
     }
 
@@ -114,7 +114,7 @@ public class SchemaParsingContext {
                 // Only add elements once the base class is resolve itself (to support nested inheritance)
                 if (!classesThatRequireAddingBaseFields.contains(baseClass.identity())) {
                     xmlTypeToEnhance.addAllElementsAtBeginning(baseClass.getElements().stream()
-                            .map(ElementType::new)
+                            .map(XmlElement::new)
                             .collect(Collectors.toList()));
                     remainingKeys.remove(key);
                 }
@@ -136,9 +136,9 @@ public class SchemaParsingContext {
         return parsedFiles.contains(normalizeFileName(path));
     }
 
-    public XmlTag getKnownElementByElementName(String elementName) {
+    public XmlElement getKnownElementByElementName(String elementName) {
 
-        Set<XmlTag> matches = knownElementTypes.values().stream()
+        Set<XmlElement> matches = knownElementTypes.values().stream()
                 .filter(e -> e.getName().equals(elementName))
                 .collect(Collectors.toSet());
 

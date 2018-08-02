@@ -1,13 +1,9 @@
 package be.geoffrey.schemaparsing;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-
 import java.util.ArrayList;
 import java.util.List;
 
-public class NamedStructure implements StructureOfClass {
+public class NamedStructure {
 
     private String namespace;
     private String name;
@@ -18,7 +14,7 @@ public class NamedStructure implements StructureOfClass {
     private NameAndNamespace extensionOf;
 
     // Used when this is a complex type
-    private List<ElementType> elements = new ArrayList<>();
+    private List<XmlElement> elements = new ArrayList<>();
 
     // Attributes of simple types =======================================
 
@@ -39,7 +35,7 @@ public class NamedStructure implements StructureOfClass {
         return name;
     }
 
-    public List<ElementType> getElements() {
+    public List<XmlElement> getElements() {
         return elements;
     }
 
@@ -87,27 +83,7 @@ public class NamedStructure implements StructureOfClass {
         return namespace + "/" + name;
     }
 
-    public Node asXmlTagWithName(String nameToUse, Document doc, SchemaParsingContext context) {
-
-        if (abstractType) {
-            throw new IllegalArgumentException("Trying to create an element of an abstract type...");
-        } else if (basedOnBasicType != null) {
-            return BasicTypeUtil.createBasicTypeElementWithNameAndValue(new NameAndNamespace(nameToUse, namespace), basedOnBasicType, doc, possibleEnumValues, basedOnRegex);
-        } else {
-            Element elementOfType = doc.createElementNS(namespace, nameToUse);
-            for (ElementType element : elements) {
-                Node childElement = element.toXmlNodeWithName(element.getName(), doc, context);
-                elementOfType.appendChild(childElement);
-            }
-            return elementOfType;
-        }
-    }
-
-    public void addElement(ElementType type) {
-        elements.add(type);
-    }
-
-    public void addAllElementsAtBeginning(List<ElementType> elements) {
+    public void addAllElementsAtBeginning(List<XmlElement> elements) {
         this.elements.addAll(0, elements);
     }
 
