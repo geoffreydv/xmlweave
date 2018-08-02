@@ -7,12 +7,13 @@ import org.w3c.dom.Node;
 import java.util.ArrayList;
 import java.util.List;
 
-public class KnownXmlType implements StructureOfClass {
+public class NamedStructure implements StructureOfClass {
+
+    private String namespace;
+    private String name;
 
     private boolean abstractType;
     private NameAndNamespace extensionOf;
-    private String namespace;
-    private String name;
 
     // Used when this is a complex type
     private List<ElementType> elements = new ArrayList<>();
@@ -24,7 +25,7 @@ public class KnownXmlType implements StructureOfClass {
     // When it is based on a regex pattern
     private String basedOnRegex;
 
-    public KnownXmlType(String namespace, String name) {
+    public NamedStructure(String namespace, String name) {
         this.namespace = namespace;
         this.name = name;
     }
@@ -103,5 +104,9 @@ public class KnownXmlType implements StructureOfClass {
 
     public void addAllElementsAtBeginning(List<ElementType> elements) {
         this.elements.addAll(0, elements);
+    }
+
+    public NameAndNamespace reference() {
+        return new NameAndNamespace(name, namespace);
     }
 }

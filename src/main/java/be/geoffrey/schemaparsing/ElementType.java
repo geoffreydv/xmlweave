@@ -1,6 +1,5 @@
 package be.geoffrey.schemaparsing;
 
-import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -12,18 +11,13 @@ import java.util.stream.Collectors;
 public class ElementType {
 
     private String name;
-    private int minOccurs;
+    private String minOccurs;
+    private String maxOccurs;
     private NameAndNamespace type;
 
     public ElementType(String name, String minOccurs, NameAndNamespace type) {
         this.name = name;
-
-        if (StringUtils.isBlank(minOccurs)) {
-            this.minOccurs = 1;
-        } else {
-            this.minOccurs = Integer.parseInt(minOccurs);
-        }
-
+        this.minOccurs = minOccurs;
         this.type = type;
     }
 
@@ -37,8 +31,12 @@ public class ElementType {
         return name;
     }
 
-    public int getMinOccurs() {
+    public String getMinOccurs() {
         return minOccurs;
+    }
+
+    public String getMaxOccurs() {
+        return maxOccurs;
     }
 
     public NameAndNamespace getType() {
@@ -55,7 +53,7 @@ public class ElementType {
             return elementOfType;
         } else {
 
-            KnownXmlType knownType = context.getKnownXmlType(type);
+            NamedStructure knownType = context.getKnownXmlType(type);
             // TODO: Replace with "Loop elements"...
             if (knownType == null) {
                 System.out.println("NULL");
@@ -63,18 +61,18 @@ public class ElementType {
             }
 
             // TODO: Meer keuze-opties
-            Set<KnownXmlType> concreteImplementationChoices = findConcreteImplementationCandidates(context, knownType);
+            Set<NamedStructure> concreteImplementationChoices = findConcreteImplementationCandidates(context, knownType);
 
             if (!concreteImplementationChoices.isEmpty()) {
                 if (knownType.isAbstractType()) {
-                    KnownXmlType concreteImplementationChoice = concreteImplementationChoices.iterator().next();
+                    NamedStructure concreteImplementationChoice = concreteImplementationChoices.iterator().next();
                     System.out.println("A choice was made here to select " + concreteImplementationChoice.getName() + " as the implementation for abstract type " + nameToUse);
-                    System.out.println("\tAll choices are: " + concreteImplementationChoices.stream().map(KnownXmlType::getName).collect(Collectors.toList()));
+                    System.out.println("\tAll choices are: " + concreteImplementationChoices.stream().map(NamedStructure::getName).collect(Collectors.toList()));
                     return concreteImplementationChoice.asXmlTagWithName(nameToUse, doc, context);
                 } else {
                     // TODO: We CAN return this object, or one of its extensions, enable a choice here as well
                     System.out.println("A choice was made here to select " + knownType.getName() + " as the implementation for " + nameToUse + " but a more specific class can be selected");
-                    System.out.println("\tAll choices are: " + concreteImplementationChoices.stream().map(KnownXmlType::getName).collect(Collectors.toList()));
+                    System.out.println("\tAll choices are: " + concreteImplementationChoices.stream().map(NamedStructure::getName).collect(Collectors.toList()));
                     return knownType.asXmlTagWithName(nameToUse, doc, context);
                 }
             } else {
@@ -87,14 +85,14 @@ public class ElementType {
         }
     }
 
-    private Set<KnownXmlType> findConcreteImplementationCandidates(SchemaParsingContext context,
-                                                                   KnownXmlType base) {
+    private Set<NamedStructure> findConcreteImplementationCandidates(SchemaParsingContext context,
+                                                                     NamedStructure base) {
 
-        Set<KnownXmlType> candidates = context.getExtensionsOfBaseClass(base.identity());
-        Set<KnownXmlType> allDiscovered = new HashSet<>(candidates);
+        Set<NamedStructure> candidates = context.getExtensionsOfBaseClass(base.identity());
+        Set<NamedStructure> allDiscovered = new HashSet<>(candidates);
         // Keep looping down the hierarchy until all of the concrete classes are discovered
 
-        for (KnownXmlType concreteClass : candidates) {
+        for (NamedStructure concreteClass : candidates) {
             allDiscovered.addAll(findConcreteImplementationCandidates(context, concreteClass));
         }
 

@@ -28,13 +28,16 @@ public class NewMain {
 
     public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException, TransformerException {
 
+        // TODO: Better Parsing
         // TODO: Support switching concrete classes with implementation
+        // TODO: Make "reference" classes instead of NameAndNamespace (not clear)
         // TODO: Prevent stackoverflows
         // TODO: XS:ANY support
         // TODO: XS:Choice support
         // TODO: Think about "Element", it shouldn't be a different thing, only a reference to a type
         // TODO: Add caching metadata to speed up generation
         // TODO: Correct namespace handling (define at top)
+        // TODO: Afhandelen "default values" van types
 
         String xsdPath = args[0];
         String elementName = args[1];
@@ -46,9 +49,9 @@ public class NewMain {
         SchemaParsingContext context = null;
 
         for (String schemaPath : sf.getFoundSchemas()) {
-            context = parseSchema(new File(schemaPath), null, context);
+            context = parseRootElementsOfSchema(new File(schemaPath), null, context);
 
-            while(context.needsInheritanceEnhancement()) {
+            while (context.needsInheritanceEnhancement()) {
                 context.addAllFieldsOfBaseClassesToConcreteImplementations();
             }
         }
@@ -61,7 +64,7 @@ public class NewMain {
 
     private static String generateXml(SchemaParsingContext context, String ns, String elementName) throws TransformerException, ParserConfigurationException {
 
-        KnownElement element;
+        RootElement element;
 
         if (StringUtils.isNotBlank(ns)) {
             NameAndNamespace reference = new NameAndNamespace(elementName, ns);
@@ -75,7 +78,7 @@ public class NewMain {
         Document doc = docBuilder.newDocument();
 
         // root elements
-        Element rootElement = element.toXmlTag(doc, context);
+        Node rootElement = element.asXmlTag(doc, context);
         doc.appendChild(rootElement);
 
         // write the content into xml file
@@ -91,11 +94,10 @@ public class NewMain {
         return sw.toString();
     }
 
-    private static SchemaParsingContext parseSchema(File schemaFile, String schemaNamespaceOverride,
-                                                    SchemaParsingContext previouslyCollectedMetadata) throws ParserConfigurationException, IOException, SAXException {
+    private static SchemaParsingContext parseRootElementsOfSchema(File schemaFile, String schemaNamespaceOverride,
+                                                                  SchemaParsingContext previousMetadata) throws ParserConfigurationException, IOException, SAXException {
 
-        SchemaParsingContext context = new SchemaParsingContext(schemaFile.getAbsolutePath(), previouslyCollectedMetadata);
-//        System.out.println("Parsing schema: " + context.getFileName());
+        SchemaParsingContext context = new SchemaParsingContext(schemaFile.getAbsolutePath(), previousMetadata);
 
         DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
@@ -111,25 +113,28 @@ public class NewMain {
             if (child.getNodeType() == Node.ELEMENT_NODE) {
                 Element childAsElement = (Element) child;
 
-                NameAndNamespace nns = parse(childAsElement.getNodeName(), knownNamespaces);
+                NameAndNamespace nns = parseReference(childAsElement.getNodeName(), knownNamespaces);
 
                 switch (nns.getName()) {
                     case "element":
-                        KnownElement thisElement = parseKnownElement(knownNamespaces, childAsElement, context);
-                        context.addKnownElement(thisElement);
+
+                        RootElement thisElement = parseRootElementDefinition(knownNamespaces, childAsElement, context);
+                        context.addKnownRootElement(thisElement);
+                        break;
+
                     case "complexType": {
-                        KnownXmlType thisType = parseKnownComplexType(knownNamespaces, childAsElement, context);
+                        NamedStructure thisType = parseRootComplexType(knownNamespaces, childAsElement, context);
 
                         if (thisType.isExtensionOfOtherBaseType()) {
                             context.indicateElementRequiresInheritanceEnhancement(thisType);
                         }
 
-                        context.addKnownXmlType(thisType);
+                        context.addKnownNamedStructure(thisType);
                         break;
                     }
                     case "simpleType": {
-                        KnownXmlType thisType = parseKnownSimpleType(childAsElement, knownNamespaces);
-                        context.addKnownXmlType(thisType);
+                        NamedStructure thisType = parseRootSimpleType(childAsElement, knownNamespaces);
+                        context.addKnownNamedStructure(thisType);
                         break;
                     }
                     case "include": {
@@ -137,7 +142,7 @@ public class NewMain {
                         File includedFileReference = new File(schemaFile.getParentFile(), schemaLocation);
 
                         if (!context.isSchemaAlreadyParsed(includedFileReference.getAbsolutePath())) {
-                            context.addInfoFromOtherSchema(parseSchema(includedFileReference, null, context));
+                            context.addInfoFromOtherSchema(parseRootElementsOfSchema(includedFileReference, null, context));
                         }
                         break;
                     }
@@ -147,7 +152,7 @@ public class NewMain {
                         File includedFileReference = new File(schemaFile.getParentFile(), schemaLocation);
 
                         if (!context.isSchemaAlreadyParsed(includedFileReference.getAbsolutePath())) {
-                            context.addInfoFromOtherSchema(parseSchema(includedFileReference, overrideNs, context));
+                            context.addInfoFromOtherSchema(parseRootElementsOfSchema(includedFileReference, overrideNs, context));
                         }
 
                         break;
@@ -178,11 +183,15 @@ public class NewMain {
         return knownNamespaces;
     }
 
-    private static KnownXmlType parseKnownSimpleType(Element simpleTypeElement, Map<String, String> knownNamespaces) {
-        return parseKnownSimpleType(simpleTypeElement, simpleTypeElement.getAttribute("name"), knownNamespaces);
+    private static NamedStructure parseRootSimpleType(Element simpleTypeElement,
+                                                      Map<String, String> knownNamespaces) {
+
+        return parseRootSimpleType(simpleTypeElement, simpleTypeElement.getAttribute("name"), knownNamespaces);
     }
 
-    private static KnownXmlType parseKnownSimpleType(Element simpleTypeElement, String nameOverride, Map<String, String> knownNamespaces) {
+    private static NamedStructure parseRootSimpleType(Element simpleTypeElement,
+                                                      String nameOverride,
+                                                      Map<String, String> knownNamespaces) {
 
         String ns = knownNamespaces.get(SCHEMA_NS);
 
@@ -190,10 +199,10 @@ public class NewMain {
             throw new IllegalArgumentException("Simple type has no name, please define one.");
         }
 
-        KnownXmlType thisType = new KnownXmlType(ns, nameOverride);
+        NamedStructure thisType = new NamedStructure(ns, nameOverride);
         Element restriction = childByTag(simpleTypeElement, "restriction", knownNamespaces);
         if (restriction != null) {
-            thisType.setSimpleTypeBase(parse(restriction.getAttribute("base"), knownNamespaces));
+            thisType.setSimpleTypeBase(parseReference(restriction.getAttribute("base"), knownNamespaces));
 
             // If it is an enum...
             List<Element> enumValues = childrenWithTag(restriction, "enumeration", knownNamespaces);
@@ -211,53 +220,54 @@ public class NewMain {
         return thisType;
     }
 
-    private static KnownXmlType parseKnownComplexType(Map<String, String> knownNamespaces, Element complexType, SchemaParsingContext context) {
+    private static RootElement parseRootElementDefinition(Map<String, String> knownNamespaces,
+                                                          Element element,
+                                                          SchemaParsingContext context) {
 
-        // TODO: typename zou wel eens een schema kunnen bevatten, check
+        String namespaceOfCurrentSchema = knownNamespaces.get(SCHEMA_NS);
+        String nameOfThisElement = element.getAttribute("name");
 
-        String ns = knownNamespaces.get(SCHEMA_NS);
-        String complexTypeName = complexType.getAttribute("name");
-        KnownXmlType thisType = new KnownXmlType(ns, complexTypeName);
-        thisType.setAbstractType("true".equals(complexType.getAttribute("abstract")));
+        // TODO: Het enige verschil tussen deze en de volgende is dat het geen naam heeft
 
-        // Add known elements
-        List<ElementType> elements = extractXmlElements(knownNamespaces, complexType, context);
-
-        for (ElementType element : elements) {
-            thisType.addElement(element);
+        if (element.hasAttribute("type")) {
+            return new RootElement(namespaceOfCurrentSchema, nameOfThisElement, parseReference(element.getAttribute("type"), knownNamespaces));
         }
 
-        // Collect data about inheritance
-        Element complexContent = childByTag(complexType, "complexContent", knownNamespaces);
-        if (complexContent != null) {
-            Element extension = childByTag(complexContent, "extension", knownNamespaces);
-            if (extension != null) {
-                NameAndNamespace baseClass = parse(extension.getAttribute("base"), knownNamespaces);
-                thisType.setExtensionOf(baseClass);
-            }
-        }
+        // This element can also define its own fields, without using a type reference.
+        // In this case we create a fake bunch of fields and assign that as the type
 
-        return thisType;
+        NamedStructure dynamicType = createDynamicNamedStructure(element, knownNamespaces, context, nameOfThisElement);
+
+        // Add this type to the context
+        context.addKnownNamedStructure(dynamicType);
+
+        // Save this element as an element that has the custom class as its type
+        return new RootElement(namespaceOfCurrentSchema, nameOfThisElement, dynamicType.reference());
     }
 
-    private static KnownElement parseKnownElement(Map<String, String> knownNamespaces, Element element, SchemaParsingContext context) {
+    private static NamedStructure createDynamicNamedStructure(Element elementThatDefinesAStructure,
+                                                              Map<String, String> knownNamespaces,
+                                                              SchemaParsingContext context,
+                                                              String nameOfThisElement) {
 
-        KnownElement thisType = new KnownElement(knownNamespaces.get(SCHEMA_NS), element.getAttribute("name"));
+        NamedStructure dynamicClass = new NamedStructure(knownNamespaces.get(SCHEMA_NS), UUID.randomUUID().toString() + "_" + nameOfThisElement);
 
-        List<ElementType> elements = extractXmlElements(knownNamespaces, element, context);
+
+
+        List<ElementType> elements = loadElementsDefinedInType(elementThatDefinesAStructure, knownNamespaces, context);
 
         for (ElementType elementType : elements) {
-            thisType.addElement(elementType);
+            dynamicClass.addElement(elementType);
         }
 
-        return thisType;
+        return dynamicClass;
     }
 
-    private static List<ElementType> extractXmlElements(Map<String, String> knownNamespaces,
-                                                        Element xmlElementContainingStructure,
-                                                        SchemaParsingContext context) {
+    private static List<ElementType> loadElementsDefinedInType(Element xmlElementContainingStructure,
+                                                               Map<String, String> knownNamespaces,
+                                                               SchemaParsingContext context) {
 
-        Element sequenceTag = findSequenceInXmlElement(knownNamespaces, xmlElementContainingStructure);
+        Element sequenceTag = findSequenceTagInsideXmlElement(knownNamespaces, xmlElementContainingStructure);
 
         if (sequenceTag == null) {
             return new ArrayList<>();
@@ -266,7 +276,37 @@ public class NewMain {
         return loadElementsFromSequenceOfElements(knownNamespaces, sequenceTag, context);
     }
 
-    private static Element findSequenceInXmlElement(Map<String, String> knownNamespaces, Element xmlElementContainingStructure) {
+    private static NamedStructure parseRootComplexType(Map<String, String> knownNamespaces,
+                                                       Element complexType,
+                                                       SchemaParsingContext context) {
+
+        String ns = knownNamespaces.get(SCHEMA_NS);
+        String nameOfComplexType = complexType.getAttribute("name");
+
+        NamedStructure namedStructure = new NamedStructure(ns, nameOfComplexType);
+        namedStructure.setAbstractType("true".equals(complexType.getAttribute("abstract"))); // Dit is specifiek aan complexContent dat als root gedefiniëerd staat
+
+        // Add known elements
+        List<ElementType> elements = loadElementsDefinedInType(complexType, knownNamespaces, context);
+
+        for (ElementType element : elements) {
+            namedStructure.addElement(element);
+        }
+
+        // Collect data about inheritance
+        Element complexContent = childByTag(complexType, "complexContent", knownNamespaces);
+        if (complexContent != null) {
+            Element extension = childByTag(complexContent, "extension", knownNamespaces);
+            if (extension != null) {
+                NameAndNamespace baseClass = parseReference(extension.getAttribute("base"), knownNamespaces);
+                namedStructure.setExtensionOf(baseClass);
+            }
+        }
+
+        return namedStructure;
+    }
+
+    private static Element findSequenceTagInsideXmlElement(Map<String, String> knownNamespaces, Element xmlElementContainingStructure) {
 
         // TODO: Als dit te gek wordt misschien een recursief zoekding maken
 
@@ -322,14 +362,14 @@ public class NewMain {
                             // Definitie wordt hier verder uitgewerkt...
 
                             String randomNameForThisElement = UUID.randomUUID().toString() + "_" + name;
-                            KnownXmlType st = parseKnownSimpleType(simpleType, randomNameForThisElement, knownNamespaces);
-                            context.addKnownXmlType(st);
+                            NamedStructure st = parseRootSimpleType(simpleType, randomNameForThisElement, knownNamespaces);
+                            context.addKnownNamedStructure(st);
 
                             return new ElementType(name, minOccurs, new NameAndNamespace(st.getName(), st.getNamespace()));
                         }
                     }
 
-                    return new ElementType(name, minOccurs, parse(typeOfElement, knownNamespaces));
+                    return new ElementType(name, minOccurs, parseReference(typeOfElement, knownNamespaces));
                 })
                 .collect(Collectors.toList());
     }
@@ -342,7 +382,7 @@ public class NewMain {
             Node child = children.item(i);
 
             if (child.getNodeType() == Node.ELEMENT_NODE) {
-                NameAndNamespace nns = parse(child.getNodeName(), knownNamespaces);
+                NameAndNamespace nns = parseReference(child.getNodeName(), knownNamespaces);
                 if (nns.getName().equals(tagName)) {
                     elements.add((Element) child);
                 }
@@ -361,7 +401,7 @@ public class NewMain {
         return children.get(0);
     }
 
-    private static NameAndNamespace parse(String name, Map<String, String> knownNamespaces) {
+    private static NameAndNamespace parseReference(String name, Map<String, String> knownNamespaces) {
         if (name.contains(":")) {
             String[] parts = name.split(":");
             return new NameAndNamespace(parts[1], knownNamespaces.get(parts[0]));
