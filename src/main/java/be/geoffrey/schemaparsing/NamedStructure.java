@@ -12,17 +12,18 @@ public class NamedStructure implements StructureOfClass {
     private String namespace;
     private String name;
 
+    // Attributes of Complex types =======================================
+
     private boolean abstractType;
     private NameAndNamespace extensionOf;
 
     // Used when this is a complex type
     private List<ElementType> elements = new ArrayList<>();
 
-    // Used when this is a simple type
-    private NameAndNamespace simpleTypeBase;
-    // When it is an 'enum'
+    // Attributes of simple types =======================================
+
+    private NameAndNamespace basedOnBasicType;
     private List<String> possibleEnumValues = new ArrayList<>();
-    // When it is based on a regex pattern
     private String basedOnRegex;
 
     public NamedStructure(String namespace, String name) {
@@ -42,8 +43,8 @@ public class NamedStructure implements StructureOfClass {
         return elements;
     }
 
-    public NameAndNamespace getSimpleTypeBase() {
-        return simpleTypeBase;
+    public NameAndNamespace getBasedOnBasicType() {
+        return basedOnBasicType;
     }
 
     public NameAndNamespace getExtensionOf() {
@@ -58,8 +59,8 @@ public class NamedStructure implements StructureOfClass {
         this.extensionOf = extensionOf;
     }
 
-    public void setSimpleTypeBase(NameAndNamespace simpleTypeBase) {
-        this.simpleTypeBase = simpleTypeBase;
+    public void setBasedOnBasicType(NameAndNamespace basedOnBasicType) {
+        this.basedOnBasicType = basedOnBasicType;
     }
 
     public boolean isAbstractType() {
@@ -74,6 +75,10 @@ public class NamedStructure implements StructureOfClass {
         possibleEnumValues.add(value);
     }
 
+    public void setPossibleEnumValues(List<String> possibleValues) {
+        this.possibleEnumValues = possibleValues;
+    }
+
     public boolean isExtensionOfOtherBaseType() {
         return extensionOf != null;
     }
@@ -86,8 +91,8 @@ public class NamedStructure implements StructureOfClass {
 
         if (abstractType) {
             throw new IllegalArgumentException("Trying to create an element of an abstract type...");
-        } else if (simpleTypeBase != null) {
-            return BasicTypeUtil.createBasicTypeElementWithNameAndValue(new NameAndNamespace(nameToUse, namespace), simpleTypeBase, doc, possibleEnumValues, basedOnRegex);
+        } else if (basedOnBasicType != null) {
+            return BasicTypeUtil.createBasicTypeElementWithNameAndValue(new NameAndNamespace(nameToUse, namespace), basedOnBasicType, doc, possibleEnumValues, basedOnRegex);
         } else {
             Element elementOfType = doc.createElementNS(namespace, nameToUse);
             for (ElementType element : elements) {
