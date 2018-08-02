@@ -40,6 +40,7 @@ public class NewMain {
         // TODO: Afhandelen "default values" van types
         // TODO: Write some utility methods to find tags bla.bla2.bla3 that returns tag
         // TODO: Allow imports without schemaLocation to define it manually
+        // TODO: Use "Optional<T>" like a baws
 
         String xsdPath = args[0];
         String elementName = args[1];
@@ -251,32 +252,67 @@ public class NewMain {
                                                                             SchemaParsingContext context) {
 
         namedStructure.setAbstractType("true".equals(complexType.getAttribute("abstract")));
+        NameAndNamespace parentClass = findBaseClassThisTypeIsExtending(complexType, knownNamespaces);
 
-        // Check if this complexType is an extension of another one
-        Element complexContent = childByTag(complexType, "complexContent", knownNamespaces);
-        if (complexContent != null) {
-            Element extension = childByTag(complexContent, "extension", knownNamespaces);
-            if (extension != null) {
-                NameAndNamespace baseClass = parseReference(extension.getAttribute("base"), knownNamespaces);
-                namedStructure.setExtensionOf(baseClass);
-            }
+        if (parentClass != null) {
+            namedStructure.setExtensionOf(parentClass);
         }
 
-        namedStructure.addAllElementsAtBeginning(parseElementsOfComplexType(complexType, knownNamespaces, context));
+        namedStructure.addAllElementsAtBeginning(collectElementsDefinedInComplexType(complexType, knownNamespaces, context));
     }
 
-    private static List<XmlElement> parseElementsOfComplexType(Element complexType,
-                                                               Map<String, String> knownNamespaces,
-                                                               SchemaParsingContext context) {
+    private static NameAndNamespace findBaseClassThisTypeIsExtending(Element complexType,
+                                                                     Map<String, String> knownNamespaces) {
+
+        Element elementThatWrapsExtension = childByTag(complexType, "complexContent", knownNamespaces);
+
+        if (elementThatWrapsExtension == null) {
+
+            elementThatWrapsExtension = childByTag(complexType, "simpleContent", knownNamespaces);
+
+            if (elementThatWrapsExtension == null) {
+                return null;
+            }
+
+            Element extension = childByTag(elementThatWrapsExtension, "extension", knownNamespaces);
+
+            if (extension == null) {
+                return null;
+            }
+
+            return parseReference(extension.getAttribute("base"), knownNamespaces);
+        }
+
+        return null;
+    }
+
+    private static List<XmlElement> collectElementsDefinedInComplexType(Element complexType,
+                                                                        Map<String, String> knownNamespaces,
+                                                                        SchemaParsingContext context) {
+
+        // TODO: Might need a refactoring if this gets too complex
+        // TODO: Should this crash if no elements were found?
 
         Element sequenceTag = findSequenceTagInComplexType(complexType, knownNamespaces);
-        return parseElementsFromSequenceTag(sequenceTag, knownNamespaces, context);
+
+        if(sequenceTag != null) {
+            return parseDirectChildElementsOfWrapper(sequenceTag, knownNamespaces, context);
+        }
+
+        Element simpleContent = childByTag(complexType, "simpleContent", knownNamespaces);
+
+        if (simpleContent == null) {
+            return new ArrayList<>();
+        }
+
+        return parseDirectChildElementsOfWrapper(simpleContent, knownNamespaces, context);
     }
 
-    private static List<XmlElement> parseElementsFromSequenceTag(Element sequenceTag, Map<String, String> knownNamespaces,
-                                                                 SchemaParsingContext context) {
+    private static List<XmlElement> parseDirectChildElementsOfWrapper(Element wrappingTag,
+                                                                      Map<String, String> knownNamespaces,
+                                                                      SchemaParsingContext context) {
 
-        List<Element> xmlElements = childrenWithTag(sequenceTag, "element", knownNamespaces);
+        List<Element> xmlElements = childrenWithTag(wrappingTag, "element", knownNamespaces);
 
         return xmlElements.stream()
                 .map(element -> {
