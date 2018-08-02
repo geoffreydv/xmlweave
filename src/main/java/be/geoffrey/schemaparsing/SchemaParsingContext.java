@@ -14,7 +14,7 @@ public class SchemaParsingContext {
     private String fileName;
 
     private Map<String, NamedStructure> knownNamedStructures = new HashMap<>();
-    private Map<String, RootElement> knownElementTypes = new HashMap<>();
+    private Map<String, XmlTag> knownElementTypes = new HashMap<>();
     // TODO: Make a "CONCRETE extension of base class" (multiple levels of inheritance nesting with abstracts)
     private Map<String, Set<String>> extensionsOfBaseClass = new HashMap<>();
 
@@ -47,7 +47,7 @@ public class SchemaParsingContext {
         this.knownNamedStructures.put(type.identity(), type);
     }
 
-    public void addKnownRootElement(RootElement element) {
+    public void addKnownRootElement(XmlTag element) {
         this.knownElementTypes.put(element.identity(), element);
     }
 
@@ -64,7 +64,7 @@ public class SchemaParsingContext {
         this.extensionsOfBaseClass.get(baseClassIdentity).add(thisType.identity());
     }
 
-    public RootElement getKnownElement(NameAndNamespace ns) {
+    public XmlTag getKnownElement(NameAndNamespace ns) {
         return knownElementTypes.get(ns.identity());
     }
 
@@ -136,9 +136,9 @@ public class SchemaParsingContext {
         return parsedFiles.contains(normalizeFileName(path));
     }
 
-    public RootElement getKnownElementByElementName(String elementName) {
+    public XmlTag getKnownElementByElementName(String elementName) {
 
-        Set<RootElement> matches = knownElementTypes.values().stream()
+        Set<XmlTag> matches = knownElementTypes.values().stream()
                 .filter(e -> e.getName().equals(elementName))
                 .collect(Collectors.toSet());
 

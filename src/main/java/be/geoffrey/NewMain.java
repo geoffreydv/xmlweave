@@ -32,8 +32,8 @@ public class NewMain {
         // TODO: Support switching concrete classes with implementation
         // TODO: Make "reference" classes instead of NameAndNamespace (not clear)
         // TODO: Prevent stackoverflows
-        // TODO: XS:ANY support
         // TODO: XS:Choice support
+        // TODO: XS:ANY support
         // TODO: Think about "Element", it shouldn't be a different thing, only a reference to a type
         // TODO: Add caching metadata to speed up generation
         // TODO: Correct namespace handling (define at top)
@@ -66,7 +66,7 @@ public class NewMain {
 
     private static String generateXml(SchemaParsingContext context, String ns, String elementName) throws TransformerException, ParserConfigurationException {
 
-        RootElement element;
+        XmlTag element;
 
         if (StringUtils.isNotBlank(ns)) {
             NameAndNamespace reference = new NameAndNamespace(elementName, ns);
@@ -120,7 +120,7 @@ public class NewMain {
                 switch (nns.getName()) {
                     case "element":
 
-                        RootElement thisElement = parseRootElementDefinition(knownNamespaces, childAsElement, context);
+                        XmlTag thisElement = parseRootElementDefinition(knownNamespaces, childAsElement, context);
                         context.addKnownRootElement(thisElement);
                         break;
 
@@ -185,16 +185,35 @@ public class NewMain {
         return knownNamespaces;
     }
 
+    private static NamedStructure parseRootComplexType(Map<String, String> knownNamespaces,
+                                                       Element complexType,
+                                                       SchemaParsingContext context) {
+
+        String ns = knownNamespaces.get(SCHEMA_NS);
+        String nameOfComplexType = complexType.getAttribute("name");
+
+        NamedStructure namedStructure = new NamedStructure(ns, nameOfComplexType);
+        fillNamedStructureWithInformationFromXmlComplexType(namedStructure, complexType, knownNamespaces, context);
+
+        return namedStructure;
+    }
+
     private static NamedStructure parseRootSimpleType(Element simpleTypeElement,
                                                       Map<String, String> knownNamespaces) {
 
-        return parseRootSimpleType(simpleTypeElement, simpleTypeElement.getAttribute("name"), knownNamespaces);
+        String ns = knownNamespaces.get(SCHEMA_NS);
+        String name = simpleTypeElement.getAttribute("name");
+        NamedStructure namedStructure = new NamedStructure(ns, name);
+
+        fillNamedStructureWithInformationFromXmlSimpleType(namedStructure, simpleTypeElement, knownNamespaces);
+
+        return namedStructure;
     }
 
 
-    private static RootElement parseRootElementDefinition(Map<String, String> knownNamespaces,
-                                                          Element element,
-                                                          SchemaParsingContext context) {
+    private static XmlTag parseRootElementDefinition(Map<String, String> knownNamespaces,
+                                                     Element element,
+                                                     SchemaParsingContext context) {
 
         String namespaceOfCurrentSchema = knownNamespaces.get(SCHEMA_NS);
         String nameOfThisElement = element.getAttribute("name");
@@ -202,7 +221,7 @@ public class NewMain {
         // TODO: Het enige verschil tussen deze en de volgende is dat het geen naam heeft
 
         if (element.hasAttribute("type")) {
-            return new RootElement(namespaceOfCurrentSchema, nameOfThisElement, parseReference(element.getAttribute("type"), knownNamespaces));
+            return new XmlTag(namespaceOfCurrentSchema, nameOfThisElement, parseReference(element.getAttribute("type"), knownNamespaces));
         }
 
         // This element can also define its own fields, without using a type reference.
@@ -215,9 +234,9 @@ public class NewMain {
 
         // Add the complex content fields to the custom type
         if (complexType != null) {
-            fillNamedStructureWithInformationFromComplexContent(dynamicType, complexType, knownNamespaces, context);
+            fillNamedStructureWithInformationFromXmlComplexType(dynamicType, complexType, knownNamespaces, context);
         } else if (simpleType != null) {
-            fillNamedStructureWithInformationFromSimpleContent(dynamicType, simpleType, knownNamespaces);
+            fillNamedStructureWithInformationFromXmlSimpleType(dynamicType, simpleType, knownNamespaces);
         } else {
             throw new IllegalArgumentException("An element contains a structure definition that is not known yet.");
         }
@@ -226,18 +245,116 @@ public class NewMain {
         context.addKnownNamedStructure(dynamicType);
 
         // Assign this custom named structure as the type of the element
-        return new RootElement(namespaceOfCurrentSchema, nameOfThisElement, dynamicType.reference());
+        return new XmlTag(namespaceOfCurrentSchema, nameOfThisElement, dynamicType.reference());
     }
 
-    private static void fillNamedStructureWithInformationFromComplexContent(NamedStructure namedStructure,
+    private static void fillNamedStructureWithInformationFromXmlComplexType(NamedStructure namedStructure,
                                                                             Element complexType,
                                                                             Map<String, String> knownNamespaces,
                                                                             SchemaParsingContext context) {
 
+        namedStructure.setAbstractType("true".equals(complexType.getAttribute("abstract")));
+
+        // Check if this complexType is an extension of another one
+        Element complexContent = childByTag(complexType, "complexContent", knownNamespaces);
+        if (complexContent != null) {
+            Element extension = childByTag(complexContent, "extension", knownNamespaces);
+            if (extension != null) {
+                NameAndNamespace baseClass = parseReference(extension.getAttribute("base"), knownNamespaces);
+                namedStructure.setExtensionOf(baseClass);
+            }
+        }
+
         namedStructure.addAllElementsAtBeginning(parseElementsOfComplexType(complexType, knownNamespaces, context));
     }
 
-    private static void fillNamedStructureWithInformationFromSimpleContent(NamedStructure namedStructure,
+    private static List<ElementType> parseElementsOfComplexType(Element complexType,
+                                                                Map<String, String> knownNamespaces,
+                                                                SchemaParsingContext context) {
+
+        Element sequenceTag = findSequenceTagInComplexType(complexType, knownNamespaces);
+        return parseElementsFromSequenceTag(sequenceTag, knownNamespaces, context);
+    }
+
+    private static List<ElementType> parseElementsFromSequenceTag(Element sequenceTag, Map<String, String> knownNamespaces,
+                                                                  SchemaParsingContext context) {
+
+        // TODO: Dit is eigenlijk de meest ingewikkelde plaats...
+        // TODO: Complex types kunnen op hun beurt intern ook vanalles definiëren
+
+        // TODO: In 1 complex type kunnen meerdere elementen gedefiniëerd worden
+        // TODO: Het toevoegen aan de context kan ofwel hier gebeuren, of ik kan het hogerop trekken. Hier is simpeler
+
+        List<Element> xmlElements = childrenWithTag(sequenceTag, "element", knownNamespaces);
+
+        return xmlElements.stream()
+                .map(element -> {
+
+                    String name = element.getAttribute("name");
+                    String minOccurs = element.getAttribute("minOccurs");
+                    String typeOfElement = element.getAttribute("type");
+
+
+
+                    if (StringUtils.isNotBlank(typeOfElement)) {
+                        // This is easy, the element has a type reference
+                        return new ElementType(name, minOccurs, parseReference(typeOfElement, knownNamespaces));
+                    }
+
+                    Element simpleType = childByTag(element, "simpleType", knownNamespaces);
+
+                    // TODO: Dit lijkt heel hard op het automatisch maken van elements dat ik al heb... Mss uitbreiden?
+
+                    if (simpleType != null) {
+                        // Definitie wordt hier verder uitgewerkt...
+                        String randomNameForThisElement = UUID.randomUUID().toString() + "_" + name;
+                        NamedStructure st = parseRootSimpleType(simpleType, randomNameForThisElement, knownNamespaces);
+                        context.addKnownNamedStructure(st);
+
+                        return new ElementType(name, minOccurs, new NameAndNamespace(st.getName(), st.getNamespace()));
+                    }
+
+                    Element complexType = childByTag(element, "complexType", knownNamespaces);
+
+                    if (complexType != null) {
+                        // Definitie wordt hier verder uitgewerkt...
+                        String randomNameForThisElement = UUID.randomUUID().toString() + "_" + name;
+                        NamedStructure st = parseRootSimpleType(complexType, randomNameForThisElement, knownNamespaces);
+                        context.addKnownNamedStructure(st);
+
+                        return new ElementType(name, minOccurs, new NameAndNamespace(st.getName(), st.getNamespace()));
+                    }
+
+                    throw new IllegalArgumentException("I have no clue how to interpret this element...");
+                })
+                .collect(Collectors.toList());
+    }
+
+    private static Element findSequenceTagInComplexType(Element xmlElementContainingStructure, Map<String, String> knownNamespaces) {
+
+        // By default complex types have the sequence tag inside
+        Element sequenceTag = childByTag(xmlElementContainingStructure, "sequence", knownNamespaces);
+
+        if (sequenceTag != null) {
+            return sequenceTag;
+        }
+
+        // This could be an extension of another type, look for the sequence in the extension part
+        Element complexContent = childByTag(xmlElementContainingStructure, "complexContent", knownNamespaces);
+        if (complexContent != null) {
+            Element extensionElement = childByTag(complexContent, "extension", knownNamespaces);
+            if (extensionElement != null) {
+                Element sequence = childByTag(extensionElement, "sequence", knownNamespaces);
+                if (sequence != null) {
+                    return sequence;
+                }
+            }
+        }
+
+        throw new IllegalArgumentException("I have no clue what to do...");
+    }
+
+    private static void fillNamedStructureWithInformationFromXmlSimpleType(NamedStructure namedStructure,
                                                                            Element simpleType,
                                                                            Map<String, String> knownNamespaces) {
 
@@ -303,146 +420,51 @@ public class NewMain {
                 String.format("%s_%s", UUID.randomUUID().toString(), nameOfThisElement));
     }
 
-    private static List<ElementType> parseElementsOfComplexType(Element complexType,
-                                                                Map<String, String> knownNamespaces,
-                                                                SchemaParsingContext context) {
 
-        Element sequenceTag = findSequenceTagInComplexType(complexType, knownNamespaces);
-        return loadElementsFromSequenceOfElements(knownNamespaces, sequenceTag, context);
+//    private static List<ElementType> loadElementsDefinedInType(Element xmlElementContainingStructure,
+//                                                               Map<String, String> knownNamespaces,
+//                                                               SchemaParsingContext context) {
+//
+//        Element sequenceTag = findSequenceTagInsideXmlElement(knownNamespaces, xmlElementContainingStructure);
+//
+//        if (sequenceTag == null) {
+//            return new ArrayList<>();
+//        }
+//
+//        return parseElementsFromSequenceTag(knownNamespaces, sequenceTag, context);
+//    }
 
-    }
 
-    private static Element findSequenceTagInComplexType(Element xmlElementContainingStructure, Map<String, String> knownNamespaces) {
-
-        // By default complex types have the sequence tag inside
-        Element sequenceTag = childByTag(xmlElementContainingStructure, "sequence", knownNamespaces);
-
-        if (sequenceTag != null) {
-            return sequenceTag;
-        }
-
-        // This could be an extension of another type, look for the sequence in the extension part
-        Element complexContent = childByTag(xmlElementContainingStructure, "complexContent", knownNamespaces);
-        if (complexContent != null) {
-            Element extensionElement = childByTag(complexContent, "extension", knownNamespaces);
-            if (extensionElement != null) {
-                Element sequence = childByTag(extensionElement, "sequence", knownNamespaces);
-                if (sequence != null) {
-                    return sequence;
-                }
-            }
-        }
-
-        throw new IllegalArgumentException("I have no clue what to do...");
-    }
-
-    private static List<ElementType> loadElementsDefinedInType(Element xmlElementContainingStructure,
-                                                               Map<String, String> knownNamespaces,
-                                                               SchemaParsingContext context) {
-
-        Element sequenceTag = findSequenceTagInsideXmlElement(knownNamespaces, xmlElementContainingStructure);
-
-        if (sequenceTag == null) {
-            return new ArrayList<>();
-        }
-
-        return loadElementsFromSequenceOfElements(knownNamespaces, sequenceTag, context);
-    }
-
-    private static List<ElementType> loadElementsFromSequenceOfElements(Map<String, String> knownNamespaces,
-                                                                        Element sequenceTag,
-                                                                        SchemaParsingContext context) {
-
-        // TODO: In 1 complex type kunnen meerdere elementen gedefiniëerd worden
-        List<Element> xmlElements = childrenWithTag(sequenceTag, "element", knownNamespaces);
-
-        return xmlElements.stream()
-                .map(element -> {
-                    String name = element.getAttribute("name");
-                    String minOccurs = element.getAttribute("minOccurs");
-                    String typeOfElement = element.getAttribute("type");
-
-                    // TODO: complexType kan ook ...
-                    if (StringUtils.isBlank(typeOfElement)) {
-
-                        Element simpleType = childByTag(element, "simpleType", knownNamespaces);
-                        if (simpleType != null) {
-                            // TODO: Dit lijkt heel hard op het automatisch maken van type dat ik al heb
-                            // Definitie wordt hier verder uitgewerkt...
-                            String randomNameForThisElement = UUID.randomUUID().toString() + "_" + name;
-                            NamedStructure st = parseRootSimpleType(simpleType, randomNameForThisElement, knownNamespaces);
-                            context.addKnownNamedStructure(st);
-
-                            return new ElementType(name, minOccurs, new NameAndNamespace(st.getName(), st.getNamespace()));
-                        }
-                    }
-
-                    return new ElementType(name, minOccurs, parseReference(typeOfElement, knownNamespaces));
-                })
-                .collect(Collectors.toList());
-    }
-
-    private static NamedStructure parseRootComplexType(Map<String, String> knownNamespaces,
-                                                       Element complexType,
-                                                       SchemaParsingContext context) {
-
-        String ns = knownNamespaces.get(SCHEMA_NS);
-        String nameOfComplexType = complexType.getAttribute("name");
-
-        NamedStructure namedStructure = new NamedStructure(ns, nameOfComplexType);
-        namedStructure.setAbstractType("true".equals(complexType.getAttribute("abstract"))); // Dit is specifiek aan complexContent dat als root gedefiniëerd staat
-
-        // Add known elements
-        List<ElementType> elements = loadElementsDefinedInType(complexType, knownNamespaces, context);
-
-        for (ElementType element : elements) {
-            namedStructure.addElement(element);
-        }
-
-        // TODO: Moet dit ook in het algemene stukje voor complex types?
-        // Collect data about inheritance
-        Element complexContent = childByTag(complexType, "complexContent", knownNamespaces);
-        if (complexContent != null) {
-            Element extension = childByTag(complexContent, "extension", knownNamespaces);
-            if (extension != null) {
-                NameAndNamespace baseClass = parseReference(extension.getAttribute("base"), knownNamespaces);
-                namedStructure.setExtensionOf(baseClass);
-            }
-        }
-
-        return namedStructure;
-    }
-
-    private static Element findSequenceTagInsideXmlElement(Map<String, String> knownNamespaces, Element xmlElementContainingStructure) {
-
-        // TODO: Als dit te gek wordt misschien een recursief zoekding maken
-
-        Element sequenceTag = childByTag(xmlElementContainingStructure, "sequence", knownNamespaces);
-
-        if (sequenceTag != null) {
-            return sequenceTag;
-        } else {
-            Element complexType = childByTag(xmlElementContainingStructure, "complexType", knownNamespaces);
-            if (complexType != null) {
-                Element sequence = childByTag(complexType, "sequence", knownNamespaces);
-                if (sequence != null) {
-                    return sequence;
-                }
-            } else {
-                Element complexContent = childByTag(xmlElementContainingStructure, "complexContent", knownNamespaces);
-                if (complexContent != null) {
-                    Element extensionElement = childByTag(complexContent, "extension", knownNamespaces);
-                    if (extensionElement != null) {
-                        Element sequence = childByTag(extensionElement, "sequence", knownNamespaces);
-                        if (sequence != null) {
-                            return sequence;
-                        }
-                    }
-                }
-            }
-        }
-        return null;
-    }
+//    private static Element findSequenceTagInsideXmlElement(Map<String, String> knownNamespaces, Element xmlElementContainingStructure) {
+//
+//        // TODO: Als dit te gek wordt misschien een recursief zoekding maken
+//
+//        Element sequenceTag = childByTag(xmlElementContainingStructure, "sequence", knownNamespaces);
+//
+//        if (sequenceTag != null) {
+//            return sequenceTag;
+//        } else {
+//            Element complexType = childByTag(xmlElementContainingStructure, "complexType", knownNamespaces);
+//            if (complexType != null) {
+//                Element sequence = childByTag(complexType, "sequence", knownNamespaces);
+//                if (sequence != null) {
+//                    return sequence;
+//                }
+//            } else {
+//                Element complexContent = childByTag(xmlElementContainingStructure, "complexContent", knownNamespaces);
+//                if (complexContent != null) {
+//                    Element extensionElement = childByTag(complexContent, "extension", knownNamespaces);
+//                    if (extensionElement != null) {
+//                        Element sequence = childByTag(extensionElement, "sequence", knownNamespaces);
+//                        if (sequence != null) {
+//                            return sequence;
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        return null;
+//    }
 
     private static List<Element> childrenWithTag(Element root, String tagName, Map<String, String> knownNamespaces) {
         NodeList children = root.getChildNodes();

@@ -3,13 +3,17 @@ package be.geoffrey.schemaparsing;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
-public class RootElement {
+public class XmlTag {
 
     private String namespace;
     private String name;
+
+    private String minOccurs;
+    private String maxOccurs;
+
     private NameAndNamespace structureReference;
 
-    public RootElement(String namespace, String name, NameAndNamespace structureReference) {
+    public XmlTag(String namespace, String name, NameAndNamespace structureReference) {
         this.namespace = namespace;
         this.name = name;
         this.structureReference = structureReference;
