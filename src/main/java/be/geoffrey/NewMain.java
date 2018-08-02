@@ -295,17 +295,18 @@ public class NewMain {
                 .collect(Collectors.toList());
     }
 
-    private static Element findSequenceTagInComplexType(Element xmlElementContainingStructure, Map<String, String> knownNamespaces) {
+    private static Element findSequenceTagInComplexType(Element complexType,
+                                                        Map<String, String> knownNamespaces) {
 
         // By default complex types have the sequence tag inside
-        Element sequenceTag = childByTag(xmlElementContainingStructure, "sequence", knownNamespaces);
+        Element sequenceTag = childByTag(complexType, "sequence", knownNamespaces);
 
         if (sequenceTag != null) {
             return sequenceTag;
         }
 
         // This could be an extension of another type, look for the sequence in the extension part
-        Element complexContent = childByTag(xmlElementContainingStructure, "complexContent", knownNamespaces);
+        Element complexContent = childByTag(complexType, "complexContent", knownNamespaces);
         if (complexContent != null) {
             Element extensionElement = childByTag(complexContent, "extension", knownNamespaces);
             if (extensionElement != null) {
@@ -316,7 +317,7 @@ public class NewMain {
             }
         }
 
-        throw new IllegalArgumentException("I have no clue what to do...");
+        throw new IllegalArgumentException("I could not find the sequence tag in complex type '" + complexType.getAttribute("name") + "' and have no clue what to do...");
     }
 
     private static void fillNamedStructureWithInformationFromXmlSimpleType(NamedStructure namedStructure,
