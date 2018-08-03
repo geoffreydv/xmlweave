@@ -2,7 +2,6 @@ package be.geoffrey.schemaparsing;
 
 import com.google.common.collect.Lists;
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import java.util.ArrayList;
@@ -15,15 +14,21 @@ public final class BasicTypeUtil {
     private BasicTypeUtil() {
     }
 
-    public static Node generateContentsOfABasicType(NameAndNamespace type,
-                                                    Document doc) {
-        return generateContentsOfABasicType(type, doc, new ArrayList<>(), null);
+    public static Node generateContentsOfABasicType(NameAndNamespace type, Document doc) {
+        return generateContentsOfACustomBasicType(type, doc, new ArrayList<>(), null);
     }
 
-    public static Node generateContentsOfABasicType(NameAndNamespace type,
-                                                    Document doc,
-                                                    List<String> enumValues,
-                                                    String regex) {
+    public static Node generateContentsOfACustomBasicType(NamedStructure namedStructure, Document doc) {
+        return generateContentsOfACustomBasicType(namedStructure.getBasedOnBasicType(),
+                doc,
+                namedStructure.getPossibleEnumValues(),
+                namedStructure.getBasedOnRegex());
+    }
+
+    private static Node generateContentsOfACustomBasicType(NameAndNamespace type,
+                                                           Document doc,
+                                                           List<String> enumValues,
+                                                           String regex) {
         switch (type.getName()) {
             case "string":
                 if (!enumValues.isEmpty()) {
@@ -46,13 +51,8 @@ public final class BasicTypeUtil {
         throw new IllegalArgumentException("Unknown basic type: " + type);
     }
 
-    public static boolean isBasicType(NameAndNamespace type) {
+    public static boolean isReferenceToBasicType(NameAndNamespace type) {
+        // TODO: Move this to reference maybe?
         return BASIC_TYPES.contains(type.getName());
-    }
-
-    public static Node createBasicTypeElementWithNameAndValue(NameAndNamespace me, NameAndNamespace basicType, Document doc, List<String> enumValues, String basedOnRegex) {
-        Element elementOfType = doc.createElementNS(me.getNamespace(), me.getName());
-        elementOfType.appendChild(BasicTypeUtil.generateContentsOfABasicType(basicType, doc, enumValues, basedOnRegex));
-        return elementOfType;
     }
 }

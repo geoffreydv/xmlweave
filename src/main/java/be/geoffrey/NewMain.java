@@ -28,19 +28,26 @@ public class NewMain {
 
     public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException, TransformerException {
 
-        // TODO: Better Parsing
+        // TODO: Parsing refactor
+        // TODO: Add path traversal
         // TODO: Support switching concrete classes with implementation
-        // TODO: Make "reference" classes instead of NameAndNamespace (not clear)
-        // TODO: Prevent stackoverflows
         // TODO: XS:Choice support
+        // TODO: Prevent stackoverflows
+        // TODO: Add support for ATTRIBUTES as well :D
+        // TODO: Make "reference" classes instead of NameAndNamespace (not clear)
         // TODO: XS:ANY support
-        // TODO: Think about "Element", it shouldn't be a different thing, only a reference to a type
         // TODO: Add caching metadata to speed up generation
         // TODO: Correct namespace handling (define at top)
+        // TODO: Allow imports without schemaLocation to define it manually
+        // TODO: Come up with a good config file format
+        // TODO: Choices about minOccurs / maxOccurs etc :)
         // TODO: Afhandelen "default values" van types
         // TODO: Write some utility methods to find tags bla.bla2.bla3 that returns tag
-        // TODO: Allow imports without schemaLocation to define it manually
+        // TODO: Make a class out of the searching etc, with context as a private field...
         // TODO: Use "Optional<T>" like a baws
+        // TODO: Validations etc, same class defined twice bvb
+        //     - TODO: 2x hetzelfde geïmporteerd maar onder andere NS of whatever
+        // TODO: Load documentation metadata / annotations etc from xsd
 
         String xsdPath = args[0];
         String elementName = args[1];
@@ -128,7 +135,7 @@ public class NewMain {
                     case "complexType": {
                         NamedStructure thisType = parseRootComplexType(knownNamespaces, childAsElement, context);
 
-                        if (thisType.isExtensionOfOtherBaseType()) {
+                        if (thisType.isExtensionOfOtherCustomType()) {
                             context.indicateElementRequiresInheritanceEnhancement(thisType);
                         }
 
@@ -258,7 +265,15 @@ public class NewMain {
             namedStructure.setExtensionOf(parentClass);
         }
 
-        namedStructure.addAllElementsAtBeginning(collectElementsDefinedInComplexType(complexType, knownNamespaces, context));
+        Element wrappingElement = findElementThatCanWrapFields(complexType, knownNamespaces);
+
+        if (wrappingElement != null) {
+            List<XmlElement> collectedElements = parseDirectChildElementsOfWrapper(wrappingElement, knownNamespaces, context);
+            List<XmlAttribute> collectedAttributes = parseDirectChildAttributesOfWrapper(wrappingElement, knownNamespaces, context);
+            namedStructure.addAllElementsAtBeginning(collectedElements);
+        } else {
+            System.out.println("WARNING: No fields were found for type " + namedStructure.getName() + ", better check if this is correct :) " + context.getFileName());
+        }
     }
 
     private static NameAndNamespace findBaseClassThisTypeIsExtending(Element complexType,
@@ -286,26 +301,20 @@ public class NewMain {
         return null;
     }
 
-    private static List<XmlElement> collectElementsDefinedInComplexType(Element complexType,
-                                                                        Map<String, String> knownNamespaces,
-                                                                        SchemaParsingContext context) {
 
-        // TODO: Might need a refactoring if this gets too complex
-        // TODO: Should this crash if no elements were found?
+    private static List<XmlAttribute> parseDirectChildAttributesOfWrapper(Element wrappingTag,
+                                                                          Map<String, String> knownNamespaces,
+                                                                          SchemaParsingContext context) {
 
-        Element sequenceTag = findSequenceTagInComplexType(complexType, knownNamespaces);
+        List<Element> xmlAttributes = childrenWithTag(wrappingTag, "attribute", knownNamespaces);
 
-        if(sequenceTag != null) {
-            return parseDirectChildElementsOfWrapper(sequenceTag, knownNamespaces, context);
-        }
-
-        Element simpleContent = childByTag(complexType, "simpleContent", knownNamespaces);
-
-        if (simpleContent == null) {
-            return new ArrayList<>();
-        }
-
-        return parseDirectChildElementsOfWrapper(simpleContent, knownNamespaces, context);
+        return xmlAttributes.stream()
+                .map(element -> {
+                    String typeOfAttribute = element.getAttribute("type");
+                    NameAndNamespace typeRef = parseReference(typeOfAttribute, knownNamespaces);
+                    return new XmlAttribute(element.getAttribute("name"), typeRef);
+                })
+                .collect(Collectors.toList());
     }
 
     private static List<XmlElement> parseDirectChildElementsOfWrapper(Element wrappingTag,
@@ -316,14 +325,15 @@ public class NewMain {
 
         return xmlElements.stream()
                 .map(element -> {
-
-                    String name = element.getAttribute("name");
-                    String minOccurs = element.getAttribute("minOccurs");
                     String typeOfElement = element.getAttribute("type");
 
                     if (StringUtils.isNotBlank(typeOfElement)) {
                         // This is easy, the element has a type reference
-                        return new XmlElement(name, minOccurs, parseReference(typeOfElement, knownNamespaces));
+                        String name = element.getAttribute("name");
+                        XmlElement xmlElement = new XmlElement(knownNamespaces.get(SCHEMA_NS), name, parseReference(typeOfElement, knownNamespaces));
+                        xmlElement.setMinOccurs(element.getAttribute("minOccurs"));
+                        xmlElement.setMaxOccurs(element.getAttribute("maxOccurs"));
+                        return xmlElement;
                     }
 
                     return parseElementDefinition(element, knownNamespaces, context);
@@ -331,8 +341,10 @@ public class NewMain {
                 .collect(Collectors.toList());
     }
 
-    private static Element findSequenceTagInComplexType(Element complexType,
+    private static Element findElementThatCanWrapFields(Element complexType,
                                                         Map<String, String> knownNamespaces) {
+
+        // TODO: Hier is ook iets fishy :) ooit ga ik wel weten wat doen...
 
         // By default complex types have the sequence tag inside
         Element sequenceTag = childByTag(complexType, "sequence", knownNamespaces);
@@ -353,7 +365,15 @@ public class NewMain {
             }
         }
 
-        throw new IllegalArgumentException("I could not find the sequence tag in complex type '" + complexType.getAttribute("name") + "' and have no clue what to do...");
+        Element simpleContent = childByTag(complexType, "simpleContent", knownNamespaces);
+        if (simpleContent != null) {
+            Element extension = childByTag(simpleContent, "extension", knownNamespaces);
+            if (extension != null) {
+                return extension;
+            }
+        }
+
+        return null;
     }
 
     private static void fillNamedStructureWithInformationFromXmlSimpleType(NamedStructure namedStructure,

@@ -1,5 +1,6 @@
 package be.geoffrey.schemaparsing;
 
+import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -18,8 +19,13 @@ public class XmlElement {
     private NameAndNamespace structureReference;
 
     public XmlElement(String namespace, String name, NameAndNamespace structureReference) {
-        this.namespace = namespace;
+
+        if (StringUtils.isBlank(name) || StringUtils.isBlank(name) || structureReference == null) {
+            throw new IllegalArgumentException("Could not create an element");
+        }
+
         this.name = name;
+        this.namespace = namespace;
         this.structureReference = structureReference;
     }
 
@@ -47,7 +53,7 @@ public class XmlElement {
 
     public Element render(Document doc, SchemaParsingContext context) {
 
-        if (BasicTypeUtil.isBasicType(structureReference)) {
+        if (BasicTypeUtil.isReferenceToBasicType(structureReference)) {
 
             Element simpleElement = doc.createElement(name);
             simpleElement.appendChild(BasicTypeUtil.generateContentsOfABasicType(structureReference, doc));
@@ -56,10 +62,16 @@ public class XmlElement {
         } else {
 
             // Fetch the structure from the context
-            NamedStructure structure = context.getKnownXmlStructure(structureReference);
+            NamedStructure structure = context.lookupXmlStructure(structureReference);
 
             if (structure == null) {
                 throw new IllegalArgumentException("Could not load the structure of this class from the XSD context.");
+            }
+
+            if (structure.isBasedOnBasicType()) {
+                Element simpleElement = doc.createElement(name);
+                simpleElement.appendChild(BasicTypeUtil.generateContentsOfACustomBasicType(structure, doc));
+                return simpleElement;
             }
 
             Set<NamedStructure> concreteImplementationChoices = findConcreteImplementationCandidates(context, structure);
@@ -72,7 +84,7 @@ public class XmlElement {
                     throw new IllegalArgumentException("No implementations were found for abstract class " + structure.identity());
                 }
 
-                return renderElementWithComplexType(doc, context, structure);
+                return buildElementFromStructure(doc, context, structure);
 
             }
 
@@ -80,19 +92,21 @@ public class XmlElement {
                 NamedStructure concreteImplementationChoice = concreteImplementationChoices.iterator().next();
                 System.out.println("A choice was made here to select " + concreteImplementationChoice.getName() + " as the implementation for element '" + name + "' of type '" + structure.getName() + "'");
                 System.out.println("\tAll choices are: " + concreteImplementationChoices.stream().map(NamedStructure::getName).collect(Collectors.toList()));
-                return renderElementWithComplexType(doc, context, concreteImplementationChoice);
+                return buildElementFromStructure(doc, context, concreteImplementationChoice);
             } else {
                 // TODO: We CAN return this object, or one of its extensions, enable a choice here as well
                 System.out.println("A choice was made here to select " + structure.getName() + " as the implementation for " + name + " but a more specific class can be selected");
                 System.out.println("\tAll choices are: " + concreteImplementationChoices.stream().map(NamedStructure::getName).collect(Collectors.toList()));
-                return renderElementWithComplexType(doc, context, structure);
+                return buildElementFromStructure(doc, context, structure);
             }
 
         }
     }
 
-    private Element renderElementWithComplexType(Document doc, SchemaParsingContext context, NamedStructure structureToUse) {
-        // If not, we can just render this type
+    private Element buildElementFromStructure(Document doc,
+                                              SchemaParsingContext context,
+                                              NamedStructure structureToUse) {
+
         Element me = doc.createElement(name);
 
         for (XmlElement xmlElement : structureToUse.getElements()) {
@@ -100,6 +114,22 @@ public class XmlElement {
         }
 
         return me;
+    }
+
+    public String getMinOccurs() {
+        return minOccurs;
+    }
+
+    public void setMinOccurs(String minOccurs) {
+        this.minOccurs = minOccurs;
+    }
+
+    public String getMaxOccurs() {
+        return maxOccurs;
+    }
+
+    public void setMaxOccurs(String maxOccurs) {
+        this.maxOccurs = maxOccurs;
     }
 
     private Set<NamedStructure> findConcreteImplementationCandidates(SchemaParsingContext context,

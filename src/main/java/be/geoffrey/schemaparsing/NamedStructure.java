@@ -15,6 +15,7 @@ public class NamedStructure {
 
     // Used when this is a complex type
     private List<XmlElement> elements = new ArrayList<>();
+    private List<XmlAttribute> attributes = new ArrayList<>();
 
     // Attributes of simple types =======================================
 
@@ -25,6 +26,18 @@ public class NamedStructure {
     public NamedStructure(String namespace, String name) {
         this.namespace = namespace;
         this.name = name;
+    }
+
+    public List<XmlAttribute> getAttributes() {
+        return attributes;
+    }
+
+    public List<String> getPossibleEnumValues() {
+        return possibleEnumValues;
+    }
+
+    public String getBasedOnRegex() {
+        return basedOnRegex;
     }
 
     public String getNamespace() {
@@ -75,7 +88,7 @@ public class NamedStructure {
         this.possibleEnumValues = possibleValues;
     }
 
-    public boolean isExtensionOfOtherBaseType() {
+    public boolean isExtensionOfOtherCustomType() {
         return extensionOf != null;
     }
 
@@ -89,5 +102,14 @@ public class NamedStructure {
 
     public NameAndNamespace reference() {
         return new NameAndNamespace(name, namespace);
+    }
+
+    @Override
+    public String toString() {
+        return identity();
+    }
+
+    public boolean isBasedOnBasicType() {
+        return basedOnBasicType != null;
     }
 }

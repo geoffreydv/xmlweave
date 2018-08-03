@@ -68,7 +68,7 @@ public class SchemaParsingContext {
         return knownElementTypes.get(ns.identity());
     }
 
-    public NamedStructure getKnownXmlStructure(NameAndNamespace ns) {
+    public NamedStructure lookupXmlStructure(NameAndNamespace ns) {
         return knownNamedStructures.get(ns.identity());
     }
 
