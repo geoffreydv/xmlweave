@@ -10,6 +10,11 @@ public class XmlAttribute {
         this.type = type;
     }
 
+    public XmlAttribute(XmlAttribute other) {
+        this.name = other.name;
+        this.type = other.type;
+    }
+
     public String getName() {
         return name;
     }

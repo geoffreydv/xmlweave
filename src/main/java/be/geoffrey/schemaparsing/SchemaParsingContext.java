@@ -92,7 +92,7 @@ public class SchemaParsingContext {
         return !classesThatRequireAddingBaseFields.isEmpty();
     }
 
-    public void addAllFieldsOfBaseClassesToConcreteImplementations() {
+    public void addAllDataOfBaseClassesToConcreteImplementations() {
 
         // TODO: Add a while and make sure it never crashes (definitions in other files etc)
 
@@ -110,12 +110,9 @@ public class SchemaParsingContext {
             NamedStructure baseClass = knownNamedStructures.get(extension.identity());
 
             if (baseClass != null) {
-
                 // Only add elements once the base class is resolve itself (to support nested inheritance)
                 if (!classesThatRequireAddingBaseFields.contains(baseClass.identity())) {
-                    xmlTypeToEnhance.addAllElementsAtBeginning(baseClass.getElements().stream()
-                            .map(XmlElement::new)
-                            .collect(Collectors.toList()));
+                    xmlTypeToEnhance.extendWithDataFromBaseClass(baseClass);
                     remainingKeys.remove(key);
                 }
             }

@@ -62,7 +62,7 @@ public class NewMain {
             context = parseDirectChildrenOfSchema(new File(schemaPath), null, context);
 
             while (context.needsInheritanceEnhancement()) {
-                context.addAllFieldsOfBaseClassesToConcreteImplementations();
+                context.addAllDataOfBaseClassesToConcreteImplementations();
             }
         }
 
@@ -269,8 +269,10 @@ public class NewMain {
 
         if (wrappingElement != null) {
             List<XmlElement> collectedElements = parseDirectChildElementsOfWrapper(wrappingElement, knownNamespaces, context);
-            List<XmlAttribute> collectedAttributes = parseDirectChildAttributesOfWrapper(wrappingElement, knownNamespaces, context);
+            List<XmlAttribute> collectedAttributes = parseDirectChildAttributesOfWrapper(wrappingElement, knownNamespaces);
+
             namedStructure.addAllElementsAtBeginning(collectedElements);
+            namedStructure.addAllAttributesAtBeginning(collectedAttributes);
         } else {
             System.out.println("WARNING: No fields were found for type " + namedStructure.getName() + ", better check if this is correct :) " + context.getFileName());
         }
@@ -300,8 +302,7 @@ public class NewMain {
 
 
     private static List<XmlAttribute> parseDirectChildAttributesOfWrapper(Element wrappingTag,
-                                                                          Map<String, String> knownNamespaces,
-                                                                          SchemaParsingContext context) {
+                                                                          Map<String, String> knownNamespaces) {
 
         List<Element> xmlAttributes = childrenWithTag(wrappingTag, "attribute", knownNamespaces);
 

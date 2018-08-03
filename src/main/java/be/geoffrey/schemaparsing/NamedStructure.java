@@ -2,6 +2,7 @@ package be.geoffrey.schemaparsing;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class NamedStructure {
 
@@ -84,10 +85,6 @@ public class NamedStructure {
         possibleEnumValues.add(value);
     }
 
-    public void setPossibleEnumValues(List<String> possibleValues) {
-        this.possibleEnumValues = possibleValues;
-    }
-
     public boolean isExtensionOfOtherCustomType() {
         return extensionOf != null;
     }
@@ -98,6 +95,10 @@ public class NamedStructure {
 
     public void addAllElementsAtBeginning(List<XmlElement> elements) {
         this.elements.addAll(0, elements);
+    }
+
+    public void addAllAttributesAtBeginning(List<XmlAttribute> attributes) {
+        this.attributes.addAll(0, attributes);
     }
 
     public NameAndNamespace reference() {
@@ -111,5 +112,15 @@ public class NamedStructure {
 
     public boolean isBasedOnBasicType() {
         return basedOnBasicType != null;
+    }
+
+    public void extendWithDataFromBaseClass(NamedStructure baseClass) {
+        addAllElementsAtBeginning(baseClass.getElements().stream()
+                .map(XmlElement::new)
+                .collect(Collectors.toList()));
+
+        addAllAttributesAtBeginning(baseClass.getAttributes().stream()
+                .map(XmlAttribute::new)
+                .collect(Collectors.toList()));
     }
 }
