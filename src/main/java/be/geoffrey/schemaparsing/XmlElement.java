@@ -51,11 +51,15 @@ public class XmlElement {
         return namespace + "/" + name;
     }
 
-    // TODO: Overflow breaker should probably be in the bottom function as well
-
     public Element render(Document doc, SchemaParsingContext context, NavNode parentNode) {
 
         NavNode currentPath = new NavNode(parentNode, structureReference, name);
+
+        boolean recursing = currentPath.willStartRecursing();
+
+        if(recursing) {
+            return null;
+        }
 
         if (BasicTypeUtil.isReferenceToBasicType(structureReference)) {
 
@@ -116,7 +120,10 @@ public class XmlElement {
         }
 
         for (XmlElement xmlElement : structureToUse.getElements()) {
-            me.appendChild(xmlElement.render(doc, context, thisNode));
+            Element element = xmlElement.render(doc, context, thisNode);
+            if(element != null) {
+                me.appendChild(element);
+            }
         }
 
         return me;
