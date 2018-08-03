@@ -1,5 +1,7 @@
 package be.geoffrey.schemaparsing;
 
+import be.geoffrey.schemaparsing.grouping.Sequence;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -15,7 +17,8 @@ public class NamedStructure {
     private NameAndNamespace extensionOf;
 
     // Used when this is a complex type
-    private List<XmlElement> elements = new ArrayList<>();
+    private List<Sequence> elementGroups = new ArrayList<>();
+
     private List<XmlAttribute> attributes = new ArrayList<>();
 
     // Attributes of simple types =======================================
@@ -49,8 +52,8 @@ public class NamedStructure {
         return name;
     }
 
-    public List<XmlElement> getElements() {
-        return elements;
+    public List<Sequence> getElementGroups() {
+        return elementGroups;
     }
 
     public NameAndNamespace getBasedOnBasicType() {
@@ -93,8 +96,8 @@ public class NamedStructure {
         return namespace + "/" + name;
     }
 
-    public void addAllElementsAtBeginning(List<XmlElement> elements) {
-        this.elements.addAll(0, elements);
+    public void addElementGroupsAtBeginning(List<Sequence> elementGroups) {
+        this.elementGroups.addAll(0, elementGroups);
     }
 
     public void addAllAttributesAtBeginning(List<XmlAttribute> attributes) {
@@ -115,8 +118,9 @@ public class NamedStructure {
     }
 
     public void extendWithDataFromBaseClass(NamedStructure baseClass) {
-        addAllElementsAtBeginning(baseClass.getElements().stream()
-                .map(XmlElement::new)
+
+        addElementGroupsAtBeginning(baseClass.getElementGroups().stream()
+                .map(Sequence::new)
                 .collect(Collectors.toList()));
 
         addAllAttributesAtBeginning(baseClass.getAttributes().stream()

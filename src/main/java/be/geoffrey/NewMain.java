@@ -1,6 +1,7 @@
 package be.geoffrey;
 
 import be.geoffrey.schemaparsing.*;
+import be.geoffrey.schemaparsing.grouping.Sequence;
 import com.google.common.collect.Lists;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -29,6 +30,7 @@ public class NewMain {
 
     public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException, TransformerException {
 
+        // TODO: Better inheritance.. groups of elements
         // TODO: XS:Choice support
         // TODO: Support switching concrete classes with implementations
         // TODO: Better attribute parsing, also make sure all elements that define attributes are found
@@ -276,11 +278,13 @@ public class NewMain {
         if (wrappingElement != null) {
             List<XmlElement> collectedElements = parseDirectChildElementsOfWrapper(wrappingElement, knownNamespaces, context);
 
+            Sequence sequence = new Sequence(collectedElements);
+
             // TODO: Split in 2 cases: elements and attributes
             // TODO: Voorlopig is dit: find classes that can wrap ELEMENTS
             List<XmlAttribute> collectedAttributes = parseDirectChildAttributesOfWrapper(wrappingElement, knownNamespaces);
 
-            namedStructure.addAllElementsAtBeginning(collectedElements);
+            namedStructure.addElementGroupsAtBeginning(Lists.newArrayList(sequence));
             namedStructure.addAllAttributesAtBeginning(collectedAttributes);
         } else {
             System.out.println("WARNING: No fields were found for type " + namedStructure.getName() + ", better check if this is correct :) " + context.getFileName());
