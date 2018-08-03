@@ -28,7 +28,8 @@ public class NewMain {
 
     public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException, TransformerException {
 
-        // TODO: Parsing refactor
+        // TODO: Finish refactor!
+        // TODO: Add visual choice indications
         // TODO: Add path traversal
         // TODO: Support switching concrete classes with implementation
         // TODO: XS:Choice support
@@ -36,6 +37,7 @@ public class NewMain {
         // TODO: Add support for ATTRIBUTES as well :D
         // TODO: Make "reference" classes instead of NameAndNamespace (not clear)
         // TODO: XS:ANY support
+        // TODO: Same types get loaded multiple times I think (saw 2 breaks when parsing complexType 'GeneriekeOpdrachtType'
         // TODO: Add caching metadata to speed up generation
         // TODO: Correct namespace handling (define at top)
         // TODO: Allow imports without schemaLocation to define it manually
@@ -282,23 +284,20 @@ public class NewMain {
         Element elementThatWrapsExtension = childByTag(complexType, "complexContent", knownNamespaces);
 
         if (elementThatWrapsExtension == null) {
-
             elementThatWrapsExtension = childByTag(complexType, "simpleContent", knownNamespaces);
-
-            if (elementThatWrapsExtension == null) {
-                return null;
-            }
-
-            Element extension = childByTag(elementThatWrapsExtension, "extension", knownNamespaces);
-
-            if (extension == null) {
-                return null;
-            }
-
-            return parseReference(extension.getAttribute("base"), knownNamespaces);
         }
 
-        return null;
+        if (elementThatWrapsExtension == null) {
+            return null;
+        }
+
+        Element extension = childByTag(elementThatWrapsExtension, "extension", knownNamespaces);
+
+        if (extension == null) {
+            return null;
+        }
+
+        return parseReference(extension.getAttribute("base"), knownNamespaces);
     }
 
 
