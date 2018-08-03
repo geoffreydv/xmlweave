@@ -34,6 +34,7 @@ public class NewMain {
         // TODO: Better attribute parsing, also make sure all elements that define attributes are found
         // TODO: Choices about minOccurs / maxOccurs etc :)
         // TODO: Add regex configuration support to provide a default etc
+        // TODO: Allow adding defaults for type "Always choose x" when deciding
         // TODO: Add idea of lists etc to path traversal
         // TODO: Add support for ATTRIBUTES as well :D
         // TODO: Make "reference" classes instead of NameAndNamespace (not clear)
