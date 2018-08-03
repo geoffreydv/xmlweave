@@ -1,5 +1,6 @@
 package be.geoffrey.schemaparsing;
 
+import be.geoffrey.schemaparsing.grouping.Choice;
 import be.geoffrey.schemaparsing.grouping.ElementGroup;
 import be.geoffrey.schemaparsing.grouping.Sequence;
 import org.apache.commons.lang3.StringUtils;
@@ -7,6 +8,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -124,15 +126,32 @@ public class XmlElement {
         for (ElementGroup elementGroup : structureToUse.getElementGroups()) {
             if (Sequence.class.isAssignableFrom(elementGroup.getClass())) {
                 for (XmlElement xmlElement : elementGroup.getElements()) {
-                    Element element = xmlElement.render(doc, context, thisNode);
-                    if (element != null) {
-                        me.appendChild(element);
-                    }
+                    renderChildElement(doc, context, thisNode, me, xmlElement);
                 }
+            } else if (Choice.class.isAssignableFrom(elementGroup.getClass())) {
+
+                // Pick the first one...
+                XmlElement elementChoice = elementGroup.getElements().get(0);
+
+                List<String> allPossibilities = elementGroup.getElements().stream()
+                        .map(XmlElement::getName)
+                        .collect(Collectors.toList());
+
+                System.out.println("[CHOICE] " + thisNode + ": Selected element " + elementChoice.getName() + " as the choice for " + structureToUse.getName() + ".");
+                System.out.println("\tOther choices are: " + allPossibilities);
+
+                renderChildElement(doc, context, thisNode, me, elementChoice);
             }
         }
 
         return me;
+    }
+
+    private void renderChildElement(Document doc, SchemaParsingContext context, NavNode thisNode, Element me, XmlElement xmlElement) {
+        Element element = xmlElement.render(doc, context, thisNode);
+        if (element != null) {
+            me.appendChild(element);
+        }
     }
 
     public String getMinOccurs() {

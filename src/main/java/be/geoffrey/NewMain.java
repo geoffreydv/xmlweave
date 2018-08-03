@@ -1,6 +1,8 @@
 package be.geoffrey;
 
 import be.geoffrey.schemaparsing.*;
+import be.geoffrey.schemaparsing.grouping.Choice;
+import be.geoffrey.schemaparsing.grouping.ElementGroup;
 import be.geoffrey.schemaparsing.grouping.Sequence;
 import com.google.common.collect.Lists;
 import org.apache.commons.io.FileUtils;
@@ -277,15 +279,29 @@ public class NewMain {
         Element wrappingElement = findXmlElementThatCanWrapElements(complexType, knownNamespaces);
 
         if (wrappingElement != null) {
+
             List<XmlElement> collectedElements = parseDirectChildElementsOfWrapper(wrappingElement, knownNamespaces, context);
 
-            Sequence sequence = new Sequence(collectedElements);
+            ElementGroup elementGroup;
+
+            NameAndNamespace nn = parseReference(wrappingElement.getNodeName(), knownNamespaces);
+
+            switch (nn.getName()) {
+                case "sequence":
+                    elementGroup = new Sequence(collectedElements);
+                    break;
+                case "choice":
+                    elementGroup = new Choice(collectedElements);
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unknown wrapping element: " + wrappingElement.getNodeName());
+            }
 
             // TODO: Split in 2 cases: elements and attributes
             // TODO: Voorlopig is dit: find classes that can wrap ELEMENTS
             List<XmlAttribute> collectedAttributes = parseDirectChildAttributesOfWrapper(wrappingElement, knownNamespaces);
 
-            namedStructure.addElementGroupsAtBeginning(Lists.newArrayList(sequence));
+            namedStructure.addElementGroupsAtBeginning(Lists.newArrayList(elementGroup));
             namedStructure.addAllAttributesAtBeginning(collectedAttributes);
         } else {
             System.out.println("WARNING: No fields were found for type " + namedStructure.getName() + ", better check if this is correct :) " + context.getFileName());
