@@ -138,7 +138,7 @@ public class XmlElement {
                         .collect(Collectors.toList());
 
                 System.out.println("[CHOICE] " + thisNode + ": Selected element " + elementChoice.getName() + " as the choice for " + structureToUse.getName() + ".");
-                System.out.println("\tOther choices are: " + allPossibilities);
+                System.out.println("\tThe other choices are: " + allPossibilities);
 
                 renderChildElement(doc, context, thisNode, me, elementChoice);
             }
