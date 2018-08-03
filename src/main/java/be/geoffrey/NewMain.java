@@ -88,7 +88,7 @@ public class NewMain {
         Document doc = docBuilder.newDocument();
 
         // root elements
-        Element rootElement = element.render(doc, context);
+        Element rootElement = element.render(doc, context, "");
         doc.appendChild(rootElement);
 
         // write the content into xml file

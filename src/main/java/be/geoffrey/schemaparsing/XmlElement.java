@@ -51,7 +51,9 @@ public class XmlElement {
         return namespace + "/" + name;
     }
 
-    public Element render(Document doc, SchemaParsingContext context) {
+    public Element render(Document doc, SchemaParsingContext context, String navPath) {
+
+        navPath += "/" + name;
 
         if (BasicTypeUtil.isReferenceToBasicType(structureReference)) {
 
@@ -61,7 +63,6 @@ public class XmlElement {
 
         } else {
 
-            // Fetch the structure from the context
             NamedStructure structure = context.lookupXmlStructure(structureReference);
 
             if (structure == null) {
@@ -84,7 +85,7 @@ public class XmlElement {
                     throw new IllegalArgumentException("No implementations were found for abstract class " + structure.identity());
                 }
 
-                return buildElementFromStructure(doc, context, structure);
+                return buildElementFromStructure(doc, context, structure, navPath);
 
             }
 
@@ -92,12 +93,12 @@ public class XmlElement {
                 NamedStructure concreteImplementationChoice = concreteImplementationChoices.iterator().next();
                 System.out.println("A choice was made here to select " + concreteImplementationChoice.getName() + " as the implementation for element '" + name + "' of type '" + structure.getName() + "'");
                 System.out.println("\tAll choices are: " + concreteImplementationChoices.stream().map(NamedStructure::getName).collect(Collectors.toList()));
-                return buildElementFromStructure(doc, context, concreteImplementationChoice);
+                return buildElementFromStructure(doc, context, concreteImplementationChoice, navPath);
             } else {
                 // TODO: We CAN return this object, or one of its extensions, enable a choice here as well
                 System.out.println("A choice was made here to select " + structure.getName() + " as the implementation for " + name + " but a more specific class can be selected");
                 System.out.println("\tAll choices are: " + concreteImplementationChoices.stream().map(NamedStructure::getName).collect(Collectors.toList()));
-                return buildElementFromStructure(doc, context, structure);
+                return buildElementFromStructure(doc, context, structure, navPath);
             }
 
         }
@@ -105,12 +106,13 @@ public class XmlElement {
 
     private Element buildElementFromStructure(Document doc,
                                               SchemaParsingContext context,
-                                              NamedStructure structureToUse) {
+                                              NamedStructure structureToUse,
+                                              String navPath) {
 
         Element me = doc.createElement(name);
 
         for (XmlElement xmlElement : structureToUse.getElements()) {
-            me.appendChild(xmlElement.render(doc, context));
+            me.appendChild(xmlElement.render(doc, context, navPath));
         }
 
         return me;
