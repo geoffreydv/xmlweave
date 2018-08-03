@@ -62,6 +62,7 @@ public class XmlElement {
         boolean recursing = currentPath.willStartRecursing();
 
         if (recursing) {
+            System.out.println("WARNING: Recursion detected: " + currentPath);
             return null;
         }
 
