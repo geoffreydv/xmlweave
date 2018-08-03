@@ -31,7 +31,6 @@ public class NewMain {
 
         // TODO: XS:Choice support
         // TODO: Support switching concrete classes with implementations
-        // TODO: Prevent stackoverflows
         // TODO: Better attribute parsing, also make sure all elements that define attributes are found
         // TODO: Choices about minOccurs / maxOccurs etc :)
         // TODO: Add regex configuration support to provide a default etc
