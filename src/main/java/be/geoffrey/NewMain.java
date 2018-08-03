@@ -52,6 +52,7 @@ public class NewMain {
         //     - TODO: 2x hetzelfde geïmporteerd maar onder andere NS of whatever
         // TODO: Load documentation metadata / annotations etc from xsd
         // TODO: Look into auto regex generation
+        // TODO: FOR wsdl compares, be able to do a fake render, and return a list of every complexType that this element uses
 
         String xsdPath = args[0];
         String elementName = args[1];
@@ -92,7 +93,7 @@ public class NewMain {
         Document doc = docBuilder.newDocument();
 
         // root elements
-        Element rootElement = element.render(doc, context, "");
+        Element rootElement = element.render(doc, context, null);
         doc.appendChild(rootElement);
 
         // write the content into xml file
@@ -349,12 +350,18 @@ public class NewMain {
 
     private static Element findXmlElementThatCanWrapElements(Element complexType, Map<String, String> knownNamespaces) {
 
+        // TODO: At some point maybe I should just search down to find the first occurrence (might not always work)
+
         return selectFirstOccurrenceOfAny(complexType, Lists.newArrayList(
                 "sequence",
                 "complexContent.extension.sequence",
                 "simpleContent.restriction.sequence",
-                "simpleContent.extension.sequence"),
-                knownNamespaces);
+                "simpleContent.extension.sequence",
+                "choice",
+                "complexContent.extension.choice",
+                "simpleContent.restriction.choice",
+                "simpleContent.extension.choice"
+        ), knownNamespaces);
     }
 
     private static Element selectFirstOccurrenceOfAny(Element rootElement,

@@ -51,9 +51,11 @@ public class XmlElement {
         return namespace + "/" + name;
     }
 
-    public Element render(Document doc, SchemaParsingContext context, String navPath) {
+    // TODO: Overflow breaker should probably be in the bottom function as well
 
-        navPath += "/" + name;
+    public Element render(Document doc, SchemaParsingContext context, NavNode parentNode) {
+
+        NavNode currentPath = new NavNode(parentNode, structureReference, name);
 
         if (BasicTypeUtil.isReferenceToBasicType(structureReference)) {
 
@@ -85,19 +87,18 @@ public class XmlElement {
                     throw new IllegalArgumentException("No implementations were found for abstract class " + structure.identity());
                 }
 
-                return buildElementFromStructure(doc, context, structure, navPath);
-
+                return buildElementFromStructure(doc, context, structure, currentPath);
             }
 
             if (structure.isAbstractType()) {
                 NamedStructure concreteImplementationChoice = concreteImplementationChoices.iterator().next();
-                System.out.println("[CHOICE] " + navPath + ": Selected " + concreteImplementationChoice.getName() + " as the implementation of type '" + structure.getName() + "'");
+                System.out.println("[CHOICE] " + currentPath + ": Selected " + concreteImplementationChoice.getName() + " as the implementation of type '" + structure.getName() + "'");
                 System.out.println("\tAll choices are: " + concreteImplementationChoices.stream().map(NamedStructure::getName).collect(Collectors.toList()));
-                return buildElementFromStructure(doc, context, concreteImplementationChoice, navPath);
+                return buildElementFromStructure(doc, context, concreteImplementationChoice, currentPath);
             } else {
-                System.out.println("[CHOICE] " + navPath + ": Selected " + structure.getName() + " as the implementation for " + structure.getName() + " but a more specific class can be selected");
+                System.out.println("[CHOICE] " + currentPath + ": Selected " + structure.getName() + " as the implementation for " + structure.getName() + " but a more specific class can be selected");
                 System.out.println("\tOther choices are: " + concreteImplementationChoices.stream().map(NamedStructure::getName).collect(Collectors.toList()));
-                return buildElementFromStructure(doc, context, structure, navPath);
+                return buildElementFromStructure(doc, context, structure, currentPath);
             }
 
         }
@@ -106,7 +107,7 @@ public class XmlElement {
     private Element buildElementFromStructure(Document doc,
                                               SchemaParsingContext context,
                                               NamedStructure structureToUse,
-                                              String navPath) {
+                                              NavNode thisNode) {
 
         Element me = doc.createElement(name);
 
@@ -115,7 +116,7 @@ public class XmlElement {
         }
 
         for (XmlElement xmlElement : structureToUse.getElements()) {
-            me.appendChild(xmlElement.render(doc, context, navPath));
+            me.appendChild(xmlElement.render(doc, context, thisNode));
         }
 
         return me;
