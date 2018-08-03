@@ -28,10 +28,11 @@ public class NewMain {
 
     public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException, TransformerException {
 
-        // TODO: Support switching concrete classes with implementation
         // TODO: XS:Choice support
+        // TODO: Support switching concrete classes with implementations
         // TODO: Prevent stackoverflows
         // TODO: Choices about minOccurs / maxOccurs etc :)
+        // TODO: Add regex configuration support to provide a default etc
         // TODO: Add idea of lists etc to path traversal
         // TODO: Add support for ATTRIBUTES as well :D
         // TODO: Make "reference" classes instead of NameAndNamespace (not clear)
@@ -48,6 +49,7 @@ public class NewMain {
         // TODO: Validations etc, same class defined twice bvb
         //     - TODO: 2x hetzelfde geïmporteerd maar onder andere NS of whatever
         // TODO: Load documentation metadata / annotations etc from xsd
+        // TODO: Look into auto regex generation
 
         String xsdPath = args[0];
         String elementName = args[1];

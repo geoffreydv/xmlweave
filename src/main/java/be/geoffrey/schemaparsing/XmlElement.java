@@ -110,6 +110,10 @@ public class XmlElement {
 
         Element me = doc.createElement(name);
 
+        for (XmlAttribute xmlAttribute : structureToUse.getAttributes()) {
+            me.setAttribute(xmlAttribute.getName(), "RANDOM ATTRIBUTE VALUE"); // TODO: Verder uitwerken / type bepalen etc...
+        }
+
         for (XmlElement xmlElement : structureToUse.getElements()) {
             me.appendChild(xmlElement.render(doc, context, navPath));
         }
