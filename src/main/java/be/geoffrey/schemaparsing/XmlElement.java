@@ -91,13 +91,12 @@ public class XmlElement {
 
             if (structure.isAbstractType()) {
                 NamedStructure concreteImplementationChoice = concreteImplementationChoices.iterator().next();
-                System.out.println("A choice was made here to select " + concreteImplementationChoice.getName() + " as the implementation for element '" + name + "' of type '" + structure.getName() + "'");
+                System.out.println("[CHOICE] " + navPath + ": Selected " + concreteImplementationChoice.getName() + " as the implementation of type '" + structure.getName() + "'");
                 System.out.println("\tAll choices are: " + concreteImplementationChoices.stream().map(NamedStructure::getName).collect(Collectors.toList()));
                 return buildElementFromStructure(doc, context, concreteImplementationChoice, navPath);
             } else {
-                // TODO: We CAN return this object, or one of its extensions, enable a choice here as well
-                System.out.println("A choice was made here to select " + structure.getName() + " as the implementation for " + name + " but a more specific class can be selected");
-                System.out.println("\tAll choices are: " + concreteImplementationChoices.stream().map(NamedStructure::getName).collect(Collectors.toList()));
+                System.out.println("[CHOICE] " + navPath + ": Selected " + structure.getName() + " as the implementation for " + structure.getName() + " but a more specific class can be selected");
+                System.out.println("\tOther choices are: " + concreteImplementationChoices.stream().map(NamedStructure::getName).collect(Collectors.toList()));
                 return buildElementFromStructure(doc, context, structure, navPath);
             }
 

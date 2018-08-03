@@ -28,10 +28,11 @@ public class NewMain {
 
     public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException, TransformerException {
 
-        // TODO: Add path traversal
         // TODO: Support switching concrete classes with implementation
         // TODO: XS:Choice support
         // TODO: Prevent stackoverflows
+        // TODO: Choices about minOccurs / maxOccurs etc :)
+        // TODO: Add idea of lists etc to path traversal
         // TODO: Add support for ATTRIBUTES as well :D
         // TODO: Make "reference" classes instead of NameAndNamespace (not clear)
         // TODO: XS:ANY support
@@ -40,7 +41,6 @@ public class NewMain {
         // TODO: Correct namespace handling (define at top)
         // TODO: Allow imports without schemaLocation to define it manually
         // TODO: Come up with a good config file format
-        // TODO: Choices about minOccurs / maxOccurs etc :)
         // TODO: Afhandelen "default values" van types
         // TODO: Write some utility methods to find tags bla.bla2.bla3 that returns tag
         // TODO: Make a class out of the searching etc, with context as a private field...
