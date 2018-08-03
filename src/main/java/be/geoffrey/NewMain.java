@@ -31,6 +31,7 @@ public class NewMain {
     public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException, TransformerException {
 
         // TODO: Better inheritance.. groups of elements
+        // TODO: Improve choice support, sometimes it picks a random implementation because possible types are a set
         // TODO: XS:Choice support
         // TODO: Support switching concrete classes with implementations
         // TODO: Better attribute parsing, also make sure all elements that define attributes are found

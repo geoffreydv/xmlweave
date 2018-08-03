@@ -1,5 +1,6 @@
 package be.geoffrey.schemaparsing;
 
+import be.geoffrey.schemaparsing.grouping.ElementGroup;
 import be.geoffrey.schemaparsing.grouping.Sequence;
 import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;
@@ -120,7 +121,7 @@ public class XmlElement {
             me.setAttribute(xmlAttribute.getName(), "RANDOM ATTRIBUTE VALUE"); // TODO: Verder uitwerken / type bepalen etc...
         }
 
-        for (Sequence elementGroup : structureToUse.getElementGroups()) {
+        for (ElementGroup elementGroup : structureToUse.getElementGroups()) {
             if (Sequence.class.isAssignableFrom(elementGroup.getClass())) {
                 for (XmlElement xmlElement : elementGroup.getElements()) {
                     Element element = xmlElement.render(doc, context, thisNode);

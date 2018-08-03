@@ -2,29 +2,20 @@ package be.geoffrey.schemaparsing.grouping;
 
 import be.geoffrey.schemaparsing.XmlElement;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-public class Sequence {
+public class Sequence extends ElementGroup {
 
-    private List<XmlElement> elements = new ArrayList<>();
-
-    public Sequence() {
-    }
-
-    public Sequence(Sequence other) {
-        Sequence sequence = new Sequence();
-        sequence.elements.addAll(other.elements.stream()
-                .map(XmlElement::new)
-                .collect(Collectors.toList()));
+    public Sequence(Sequence sequence) {
+        super(sequence);
     }
 
     public Sequence(List<XmlElement> elements) {
-        this.elements = elements;
+        super(elements);
     }
 
-    public List<XmlElement> getElements() {
-        return elements;
+    @Override
+    public ElementGroup copy() {
+        return new Sequence(this);
     }
 }

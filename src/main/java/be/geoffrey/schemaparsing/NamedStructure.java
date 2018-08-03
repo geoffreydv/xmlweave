@@ -1,6 +1,6 @@
 package be.geoffrey.schemaparsing;
 
-import be.geoffrey.schemaparsing.grouping.Sequence;
+import be.geoffrey.schemaparsing.grouping.ElementGroup;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +17,7 @@ public class NamedStructure {
     private NameAndNamespace extensionOf;
 
     // Used when this is a complex type
-    private List<Sequence> elementGroups = new ArrayList<>();
+    private List<ElementGroup> elementGroups = new ArrayList<>();
 
     private List<XmlAttribute> attributes = new ArrayList<>();
 
@@ -52,7 +52,7 @@ public class NamedStructure {
         return name;
     }
 
-    public List<Sequence> getElementGroups() {
+    public List<ElementGroup> getElementGroups() {
         return elementGroups;
     }
 
@@ -96,7 +96,7 @@ public class NamedStructure {
         return namespace + "/" + name;
     }
 
-    public void addElementGroupsAtBeginning(List<Sequence> elementGroups) {
+    public void addElementGroupsAtBeginning(List<ElementGroup> elementGroups) {
         this.elementGroups.addAll(0, elementGroups);
     }
 
@@ -120,7 +120,7 @@ public class NamedStructure {
     public void extendWithDataFromBaseClass(NamedStructure baseClass) {
 
         addElementGroupsAtBeginning(baseClass.getElementGroups().stream()
-                .map(Sequence::new)
+                .map(ElementGroup::copy)
                 .collect(Collectors.toList()));
 
         addAllAttributesAtBeginning(baseClass.getAttributes().stream()
