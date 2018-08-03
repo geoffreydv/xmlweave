@@ -1,6 +1,7 @@
 package be.geoffrey;
 
 import be.geoffrey.schemaparsing.*;
+import com.google.common.collect.Lists;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.*;
@@ -31,6 +32,7 @@ public class NewMain {
         // TODO: XS:Choice support
         // TODO: Support switching concrete classes with implementations
         // TODO: Prevent stackoverflows
+        // TODO: Better attribute parsing, also make sure all elements that define attributes are found
         // TODO: Choices about minOccurs / maxOccurs etc :)
         // TODO: Add regex configuration support to provide a default etc
         // TODO: Add idea of lists etc to path traversal
@@ -267,7 +269,7 @@ public class NewMain {
             namedStructure.setExtensionOf(parentClass);
         }
 
-        Element wrappingElement = findElementThatCanWrapFields(complexType, knownNamespaces);
+        Element wrappingElement = findElementThatCanWrapElementsAndAttributes(complexType, knownNamespaces);
 
         if (wrappingElement != null) {
             List<XmlElement> collectedElements = parseDirectChildElementsOfWrapper(wrappingElement, knownNamespaces, context);
@@ -341,35 +343,29 @@ public class NewMain {
                 .collect(Collectors.toList());
     }
 
-    private static Element findElementThatCanWrapFields(Element complexType,
-                                                        Map<String, String> knownNamespaces) {
 
-        // TODO: Hier is ook iets fishy :) ooit ga ik wel weten wat doen...
+    private static Element findElementThatCanWrapElementsAndAttributes(Element complexType, Map<String, String> knownNamespaces) {
 
-        // By default complex types have the sequence tag inside
-        Element sequenceTag = childByTag(complexType, "sequence", knownNamespaces);
+        // TODO: Split in 2 cases: elements and attributes
+        // TODO: Voorlopig is dit: find classes that can wrap ELEMENTS
 
-        if (sequenceTag != null) {
-            return sequenceTag;
-        }
+        return selectFirstOccurrenceOfAny(complexType, Lists.newArrayList(
+                "sequence",
+                "complexContent.extension.sequence",
+                "simpleContent.restriction.sequence",
+                "simpleContent.extension.sequence"),
+                knownNamespaces);
+    }
 
-        // This could be an extension of another type, look for the sequence in the extension part
-        Element complexContent = childByTag(complexType, "complexContent", knownNamespaces);
-        if (complexContent != null) {
-            Element extensionElement = childByTag(complexContent, "extension", knownNamespaces);
-            if (extensionElement != null) {
-                Element sequence = childByTag(extensionElement, "sequence", knownNamespaces);
-                if (sequence != null) {
-                    return sequence;
-                }
-            }
-        }
+    private static Element selectFirstOccurrenceOfAny(Element rootElement,
+                                                      List<String> selectors,
+                                                      Map<String, String> knownNamespaces) {
 
-        Element simpleContent = childByTag(complexType, "simpleContent", knownNamespaces);
-        if (simpleContent != null) {
-            Element extension = childByTag(simpleContent, "extension", knownNamespaces);
-            if (extension != null) {
-                return extension;
+        for (String selector : selectors) {
+            Element result = select(rootElement, selector, knownNamespaces);
+
+            if (result != null) {
+                return result;
             }
         }
 
@@ -443,5 +439,26 @@ public class NewMain {
         } else {
             return new NameAndNamespace(name, knownNamespaces.get(SCHEMA_NS));
         }
+    }
+
+    private static Element select(Element base, String selection, Map<String, String> knownNamespaces) {
+
+        String[] parts = selection.split("\\.");
+
+        Element cursor = base;
+
+        for (String part : parts) {
+            if (StringUtils.isNotBlank(part)) {
+                Element child = childByTag(cursor, part, knownNamespaces);
+
+                if (child == null) {
+                    return null;
+                }
+
+                cursor = child;
+            }
+        }
+
+        return cursor;
     }
 }
