@@ -32,11 +32,12 @@ public class NewMain {
 
     public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException, TransformerException {
 
-        // TODO: Better inheritance.. groups of elements
         // TODO: Improve choice support, sometimes it picks a random implementation because possible types are a set
-        // TODO: XS:Choice support
-        // TODO: Support switching concrete classes with implementations
         // TODO: Better attribute parsing, also make sure all elements that define attributes are found
+        // TODO: Add configuration to enable switching for implementations
+        // TODO: Add configuration to enable switching for choice tags
+        // TODO: Add minOccurs / maxOccurs support, multi elements / path rendering with [0] etc
+        // TODO: Add configuration to enable switching for minOccurs
         // TODO: Choices about minOccurs / maxOccurs etc :)
         // TODO: Add regex configuration support to provide a default etc
         // TODO: Allow adding defaults for type "Always choose x" when deciding
