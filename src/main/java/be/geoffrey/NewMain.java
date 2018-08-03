@@ -269,10 +269,13 @@ public class NewMain {
             namedStructure.setExtensionOf(parentClass);
         }
 
-        Element wrappingElement = findElementThatCanWrapElementsAndAttributes(complexType, knownNamespaces);
+        Element wrappingElement = findXmlElementThatCanWrapElements(complexType, knownNamespaces);
 
         if (wrappingElement != null) {
             List<XmlElement> collectedElements = parseDirectChildElementsOfWrapper(wrappingElement, knownNamespaces, context);
+
+            // TODO: Split in 2 cases: elements and attributes
+            // TODO: Voorlopig is dit: find classes that can wrap ELEMENTS
             List<XmlAttribute> collectedAttributes = parseDirectChildAttributesOfWrapper(wrappingElement, knownNamespaces);
 
             namedStructure.addAllElementsAtBeginning(collectedElements);
@@ -344,10 +347,7 @@ public class NewMain {
     }
 
 
-    private static Element findElementThatCanWrapElementsAndAttributes(Element complexType, Map<String, String> knownNamespaces) {
-
-        // TODO: Split in 2 cases: elements and attributes
-        // TODO: Voorlopig is dit: find classes that can wrap ELEMENTS
+    private static Element findXmlElementThatCanWrapElements(Element complexType, Map<String, String> knownNamespaces) {
 
         return selectFirstOccurrenceOfAny(complexType, Lists.newArrayList(
                 "sequence",
