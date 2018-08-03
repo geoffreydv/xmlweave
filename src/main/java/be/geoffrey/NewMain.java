@@ -28,8 +28,6 @@ public class NewMain {
 
     public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException, TransformerException {
 
-        // TODO: Finish refactor!
-        // TODO: Add visual choice indications
         // TODO: Add path traversal
         // TODO: Support switching concrete classes with implementation
         // TODO: XS:Choice support
