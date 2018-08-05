@@ -32,7 +32,7 @@ public class NewMain {
 
     public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException, TransformerException {
 
-        // TODO: Better attribute parsing, also make sure all elements that define attributes are found
+        // ---------- Essential: Generate a completely valid XML for a given XSD element
         // TODO: Add configuration to enable switching for implementations
         // TODO: Add configuration to enable switching for choice tags
         // TODO: Add minOccurs / maxOccurs support but just with 1 level, to enable mandatory / not mandatory
@@ -43,6 +43,7 @@ public class NewMain {
         // TODO: Allow adding defaults for type "Always choose x" when deciding
         // TODO: Add idea of lists etc to path traversal
         // TODO: Add support for ATTRIBUTES as well :D
+        // TODO: Better attribute parsing, also make sure all elements that define attributes are found
         // TODO: Make "reference" classes instead of NameAndNamespace (not clear)
         // TODO: XS:ANY support
         // TODO: Same types get loaded multiple times I think (saw 2 breaks when parsing complexType 'GeneriekeOpdrachtType'
