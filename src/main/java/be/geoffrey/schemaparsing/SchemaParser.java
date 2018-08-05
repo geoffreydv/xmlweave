@@ -166,6 +166,8 @@ public final class SchemaParser {
         } else if (simpleType != null) {
             fillNamedStructureWithInformationFromXmlSimpleType(dynamicType, simpleType, knownNamespaces);
         } else {
+
+            // TODO: This is valid, the element has no default xs type, handle this properly
             throw new IllegalArgumentException("An element contains a structure definition that is not known yet.");
         }
 
@@ -188,7 +190,7 @@ public final class SchemaParser {
             namedStructure.setExtensionOf(parentClass);
         }
 
-        Element wrappingElement = findXmlElementThatCanWrapElements(complexType, knownNamespaces);
+        Element wrappingElement = findXmlElementThatCanContainElementDefinitions(complexType, knownNamespaces);
 
         if (wrappingElement != null) {
 
@@ -282,7 +284,7 @@ public final class SchemaParser {
     }
 
 
-    private static Element findXmlElementThatCanWrapElements(Element complexType, Map<String, String> knownNamespaces) {
+    private static Element findXmlElementThatCanContainElementDefinitions(Element complexType, Map<String, String> knownNamespaces) {
 
         // TODO: At some point maybe I should just search down to find the first occurrence (might not always work)
 
