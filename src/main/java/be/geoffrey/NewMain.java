@@ -1,6 +1,7 @@
 package be.geoffrey;
 
 import be.geoffrey.schemaparsing.*;
+import be.geoffrey.schemaparsing.grouping.XmlElement;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;

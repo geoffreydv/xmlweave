@@ -1,6 +1,6 @@
 package be.geoffrey.schemaparsing;
 
-import be.geoffrey.schemaparsing.grouping.ElementGroup;
+import be.geoffrey.schemaparsing.grouping.StructurePart;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +17,7 @@ public class NamedStructure implements Comparable<NamedStructure> {
     private NameAndNamespace extensionOf;
 
     // Used when this is a complex type
-    private List<ElementGroup> elementGroups = new ArrayList<>();
+    private List<StructurePart> structureParts = new ArrayList<>();
 
     private List<XmlAttribute> attributes = new ArrayList<>();
 
@@ -63,8 +63,8 @@ public class NamedStructure implements Comparable<NamedStructure> {
         return name;
     }
 
-    public List<ElementGroup> getElementGroups() {
-        return elementGroups;
+    public List<StructurePart> getStructureParts() {
+        return structureParts;
     }
 
     public NameAndNamespace getBasedOnBasicType() {
@@ -107,8 +107,8 @@ public class NamedStructure implements Comparable<NamedStructure> {
         return namespace + "/" + name;
     }
 
-    public void addElementGroupsAtBeginning(List<ElementGroup> elementGroups) {
-        this.elementGroups.addAll(0, elementGroups);
+    public void addStructurePartsAtBeginning(List<StructurePart> structureParts) {
+        this.structureParts.addAll(0, structureParts);
     }
 
     public void addAllAttributesAtBeginning(List<XmlAttribute> attributes) {
@@ -130,8 +130,8 @@ public class NamedStructure implements Comparable<NamedStructure> {
 
     public void extendWithDataFromBaseClass(NamedStructure baseClass) {
 
-        addElementGroupsAtBeginning(baseClass.getElementGroups().stream()
-                .map(ElementGroup::copy)
+        addStructurePartsAtBeginning(baseClass.getStructureParts().stream()
+                .map(StructurePart::copy)
                 .collect(Collectors.toList()));
 
         addAllAttributesAtBeginning(baseClass.getAttributes().stream()

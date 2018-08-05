@@ -22,7 +22,17 @@ public class NestingTests {
         assertThat(ctx.getKnownNamedStructures().values())
                 .extracting("baseName")
                 .contains("a", "d", "BaseElement");
+    }
 
-        System.out.println("HEY");
+    @Test
+    public void testParseIfrs9Items() throws IOException, SAXException, ParserConfigurationException {
+        ClassLoader classLoader = getClass().getClassLoader();
+        File file = new File(classLoader.getResource("multi_level_ifrs9.xsd").getFile());
+
+        SchemaParsingContext ctx = SchemaParser.parseDirectChildrenOfSchema(file);
+
+        assertThat(ctx.getKnownNamedStructures().values())
+                .extracting("baseName")
+                .contains("financialInstruments", "parties", "collaterals", "dataSet");
     }
 }

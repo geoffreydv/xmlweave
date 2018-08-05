@@ -1,21 +1,24 @@
 package be.geoffrey.schemaparsing.grouping;
 
-import be.geoffrey.schemaparsing.XmlElement;
-
 import java.util.List;
 
-public class Choice extends ElementGroup {
+public class Choice extends ElementGroup implements StructurePart {
 
     public Choice(Choice sequence) {
         super(sequence);
     }
 
-    public Choice(List<XmlElement> elements) {
+    public Choice(List<StructurePart> elements) {
         super(elements);
     }
 
     @Override
-    public ElementGroup copy() {
+    public StructurePart copy() {
         return new Choice(this);
+    }
+
+    @Override
+    public List<StructurePart> getUnderlyingElements() {
+        return super.getParts();
     }
 }

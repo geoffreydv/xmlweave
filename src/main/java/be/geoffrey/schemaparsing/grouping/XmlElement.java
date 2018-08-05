@@ -1,16 +1,18 @@
-package be.geoffrey.schemaparsing;
+package be.geoffrey.schemaparsing.grouping;
 
-import be.geoffrey.schemaparsing.grouping.Choice;
-import be.geoffrey.schemaparsing.grouping.ElementGroup;
-import be.geoffrey.schemaparsing.grouping.Sequence;
+import be.geoffrey.schemaparsing.*;
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-public class XmlElement {
+public class XmlElement implements StructurePart {
 
     private String namespace;
     private String name;
@@ -29,6 +31,16 @@ public class XmlElement {
         this.name = name;
         this.namespace = namespace;
         this.structureReference = structureReference;
+    }
+
+    @Override
+    public StructurePart copy() {
+        return new XmlElement(this);
+    }
+
+    @Override
+    public List<StructurePart> getUnderlyingElements() {
+        return new ArrayList<>();
     }
 
     public XmlElement(XmlElement other) {
@@ -111,6 +123,44 @@ public class XmlElement {
         }
     }
 
+    private void appendElementsForEveryPartInStructure(Element me,
+                                                       List<StructurePart> structureParts,
+                                                       Document doc,
+                                                       SchemaParsingContext context,
+                                                       NavNode thisNode) {
+
+        for (StructurePart structurePart : structureParts) {
+            if (XmlElement.class.isAssignableFrom(structurePart.getClass())) {
+                // Sometimes it's a plain element...
+                renderChildElement(doc, context, thisNode, me, (XmlElement) structurePart);
+
+            } else if (Sequence.class.isAssignableFrom(structurePart.getClass())) {
+                // Sometimes it's a sequence, in this case we append every item in the sequence
+                List<StructurePart> partsInSequence = structurePart.getUnderlyingElements();
+                appendElementsForEveryPartInStructure(me, partsInSequence, doc, context, thisNode);
+
+            } else if (Choice.class.isAssignableFrom(structurePart.getClass())) {
+
+                // Pick the first one... // TODO: Add selecting behavior here
+                List<StructurePart> partsAvailableToChooseFrom = structurePart.getUnderlyingElements();
+                StructurePart firstPart = partsAvailableToChooseFrom.get(0);
+                appendElementsForEveryPartInStructure(me, Lists.newArrayList(firstPart) , doc, context, thisNode);
+
+                System.out.println("HMM");
+                // TODO: Find a way to visualize this (a choice can contain 2 elements and a sequence for example)
+                System.out.println("[CHOICE] Made a choice for " + thisNode);
+//                List<String> allPossibilities = firstPart.getUnderlyingElements().stream()
+//                        .map(XmlElement::getName)
+//                        .collect(Collectors.toList());
+//
+//                System.out.println("[CHOICE] " + thisNode + ": Selected element " + elementChoice.getName() + " as the choice for " + structureToUse.getName() + ".");
+//                System.out.println("\tThe other choices are: " + allPossibilities);
+//
+//                renderChildElement(doc, context, thisNode, me, elementChoice);
+            }
+        }
+    }
+
     private Element buildElementFromStructure(Document doc,
                                               SchemaParsingContext context,
                                               NamedStructure structureToUse,
@@ -122,31 +172,17 @@ public class XmlElement {
             me.setAttribute(xmlAttribute.getName(), "RANDOM ATTRIBUTE VALUE"); // TODO: Verder uitwerken / type bepalen etc...
         }
 
-        for (ElementGroup elementGroup : structureToUse.getElementGroups()) {
-            if (Sequence.class.isAssignableFrom(elementGroup.getClass())) {
-                for (XmlElement xmlElement : elementGroup.getElements()) {
-                    renderChildElement(doc, context, thisNode, me, xmlElement);
-                }
-            } else if (Choice.class.isAssignableFrom(elementGroup.getClass())) {
-
-                // Pick the first one...
-                XmlElement elementChoice = elementGroup.getElements().get(0);
-
-                List<String> allPossibilities = elementGroup.getElements().stream()
-                        .map(XmlElement::getName)
-                        .collect(Collectors.toList());
-
-                System.out.println("[CHOICE] " + thisNode + ": Selected element " + elementChoice.getName() + " as the choice for " + structureToUse.getName() + ".");
-                System.out.println("\tThe other choices are: " + allPossibilities);
-
-                renderChildElement(doc, context, thisNode, me, elementChoice);
-            }
-        }
+        appendElementsForEveryPartInStructure(me, structureToUse.getStructureParts(), doc, context, thisNode);
 
         return me;
     }
 
-    private void renderChildElement(Document doc, SchemaParsingContext context, NavNode thisNode, Element me, XmlElement xmlElement) {
+    private void renderChildElement(Document doc,
+                                    SchemaParsingContext context,
+                                    NavNode thisNode,
+                                    Element me,
+                                    XmlElement xmlElement) {
+
         Element element = xmlElement.render(doc, context, thisNode);
         if (element != null) {
             me.appendChild(element);

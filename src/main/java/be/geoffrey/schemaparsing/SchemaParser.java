@@ -1,8 +1,9 @@
 package be.geoffrey.schemaparsing;
 
 import be.geoffrey.schemaparsing.grouping.Choice;
-import be.geoffrey.schemaparsing.grouping.ElementGroup;
 import be.geoffrey.schemaparsing.grouping.Sequence;
+import be.geoffrey.schemaparsing.grouping.StructurePart;
+import be.geoffrey.schemaparsing.grouping.XmlElement;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.*;
@@ -194,28 +195,12 @@ public final class SchemaParser {
 
         if (wrappingElement != null) {
 
-            List<XmlElement> collectedElements = parseDirectChildElementsOfWrapper(wrappingElement, knownNamespaces, context);
-
-            ElementGroup elementGroup;
-
-            NameAndNamespace nn = parseReference(wrappingElement.getNodeName(), knownNamespaces);
-
-            switch (nn.getName()) {
-                case "sequence":
-                    elementGroup = new Sequence(collectedElements);
-                    break;
-                case "choice":
-                    elementGroup = new Choice(collectedElements);
-                    break;
-                default:
-                    throw new IllegalArgumentException("Unknown wrapping element: " + wrappingElement.getNodeName());
-            }
-
             // TODO: Split in 2 cases: elements and attributes
             // TODO: Voorlopig is dit: find classes that can wrap ELEMENTS
             List<XmlAttribute> collectedAttributes = parseDirectChildAttributesOfWrapper(wrappingElement, knownNamespaces);
+            List<StructurePart> collectedStructureParts = parseStructurePartsInWrapper(wrappingElement, knownNamespaces, context);
 
-            namedStructure.addElementGroupsAtBeginning(Lists.newArrayList(elementGroup));
+            namedStructure.addStructurePartsAtBeginning(collectedStructureParts);
             namedStructure.addAllAttributesAtBeginning(collectedAttributes);
         } else {
             System.out.println("WARNING: No fields were found for type " + namedStructure.getName() + ", better check if this is correct :) " + context.getFileName());
@@ -259,28 +244,51 @@ public final class SchemaParser {
                 .collect(Collectors.toList());
     }
 
-    private static List<XmlElement> parseDirectChildElementsOfWrapper(Element wrappingTag,
-                                                                      Map<String, String> knownNamespaces,
-                                                                      SchemaParsingContext context) {
+    private static List<StructurePart> parseStructurePartsInWrapper(Element wrappingTag,
+                                                                    Map<String, String> knownNamespaces,
+                                                                    SchemaParsingContext context) {
 
-        List<Element> xmlElements = childrenWithTag(wrappingTag, "element", knownNamespaces);
+        List<StructurePart> parts = new ArrayList<>();
 
-        return xmlElements.stream()
-                .map(element -> {
-                    String typeOfElement = element.getAttribute("type");
+        NodeList childNodes = wrappingTag.getChildNodes();
+        for (int i = 0; i < childNodes.getLength(); i++) {
+            Node cn = childNodes.item(i);
 
-                    if (StringUtils.isNotBlank(typeOfElement)) {
-                        // This is easy, the element has a type reference
-                        String name = element.getAttribute("name");
-                        XmlElement xmlElement = new XmlElement(knownNamespaces.get(SCHEMA_NS), name, parseReference(typeOfElement, knownNamespaces));
-                        xmlElement.setMinOccurs(element.getAttribute("minOccurs"));
-                        xmlElement.setMaxOccurs(element.getAttribute("maxOccurs"));
-                        return xmlElement;
-                    }
+            if (cn.getNodeType() == Node.ELEMENT_NODE) {
+                NameAndNamespace nn = parseReference(cn.getNodeName(), knownNamespaces);
 
-                    return parseElementDefinition(element, knownNamespaces, context);
-                })
-                .collect(Collectors.toList());
+                switch (nn.getName()) {
+                    case "element":
+                        parts.add(extractInfoFromXmlElement(knownNamespaces, context, (Element) cn));
+                        break;
+                    case "sequence":
+                        List<StructurePart> childrenOfSequence = parseStructurePartsInWrapper((Element) cn, knownNamespaces, context);
+                        parts.add(new Sequence(childrenOfSequence));
+                        break;
+                    case "choice":
+                        List<StructurePart> childrenOfChoice = parseStructurePartsInWrapper((Element) cn, knownNamespaces, context);
+                        parts.add(new Choice(childrenOfChoice));
+                        break;
+                }
+            }
+        }
+
+        return parts;
+    }
+
+    private static XmlElement extractInfoFromXmlElement(Map<String, String> knownNamespaces, SchemaParsingContext context, Element element) {
+        String typeOfElement = element.getAttribute("type");
+
+        if (StringUtils.isNotBlank(typeOfElement)) {
+            // This is easy, the element has a type reference
+            String name = element.getAttribute("name");
+            XmlElement xmlElement = new XmlElement(knownNamespaces.get(SCHEMA_NS), name, parseReference(typeOfElement, knownNamespaces));
+            xmlElement.setMinOccurs(element.getAttribute("minOccurs"));
+            xmlElement.setMaxOccurs(element.getAttribute("maxOccurs"));
+            return xmlElement;
+        }
+
+        return parseElementDefinition(element, knownNamespaces, context);
     }
 
 

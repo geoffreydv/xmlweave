@@ -1,5 +1,7 @@
 package be.geoffrey.schemaparsing;
 
+import be.geoffrey.schemaparsing.grouping.XmlElement;
+
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="testing"
+           targetNamespace="testing">
+
+    <xs:complexType name="dataSet">
+        <xs:sequence>
+            <xs:element name="validityDate" type="xs:date" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="dataGroupName" type="xs:string" minOccurs="1" maxOccurs="1"/>
+            <xs:choice>
+                <xs:element name="parties">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="party" type="xs:string" maxOccurs="unbounded" minOccurs="0"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="financialInstruments">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="financialInstrument" type="xs:string" maxOccurs="unbounded"
+                                        minOccurs="0"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="collaterals">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="collateral" type="xs:string" maxOccurs="unbounded" minOccurs="0"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+            </xs:choice>
+        </xs:sequence>
+    </xs:complexType>
+
+</xs:schema>
