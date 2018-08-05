@@ -32,17 +32,18 @@ public class NewMain {
 
     public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException, TransformerException {
 
+        // TODO: Add support for ATTRIBUTES as well :D
+        // TODO: Add config for regex types
         // ---------- Essential: Generate a completely valid XML for a given XSD element
         // TODO: Add configuration to enable switching for implementations
         // TODO: Add configuration to enable switching for choice tags
         // TODO: Add minOccurs / maxOccurs support but just with 1 level, to enable mandatory / not mandatory
         // TODO: Add minOccurs / maxOccurs support, multi elements / path rendering with [0] etc
+        // TODO: Add idea of lists etc to path traversal
         // TODO: Add configuration to enable switching for minOccurs
         // TODO: Choices about minOccurs / maxOccurs etc :)
         // TODO: Add regex configuration support to provide a default etc
         // TODO: Allow adding defaults for type "Always choose x" when deciding
-        // TODO: Add idea of lists etc to path traversal
-        // TODO: Add support for ATTRIBUTES as well :D
         // TODO: Better attribute parsing, also make sure all elements that define attributes are found
         // TODO: Make "reference" classes instead of NameAndNamespace (not clear)
         // TODO: XS:ANY support

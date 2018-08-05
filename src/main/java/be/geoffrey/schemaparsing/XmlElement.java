@@ -75,7 +75,7 @@ public class XmlElement {
             NamedStructure structure = context.lookupXmlStructure(structureReference);
 
             if (structure == null) {
-                throw new IllegalArgumentException("Could not load the structure of this class from the XSD context.");
+                throw new IllegalArgumentException("Could not load the structure of this class from the XSD context: " + structureReference.identity());
             }
 
             if (structure.isBasedOnBasicType()) {

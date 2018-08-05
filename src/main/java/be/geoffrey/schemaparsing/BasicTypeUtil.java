@@ -9,7 +9,7 @@ import java.util.List;
 
 public final class BasicTypeUtil {
 
-    private static final List<String> BASIC_TYPES = Lists.newArrayList("string", "int", "boolean", "double", "decimal", "integer");
+    private static final List<String> BASIC_TYPES = Lists.newArrayList("string", "int", "boolean", "double", "decimal", "integer", "dateTime", "date");
 
     private BasicTypeUtil() {
     }
@@ -30,6 +30,10 @@ public final class BasicTypeUtil {
                                                            List<String> enumValues,
                                                            String regex) {
         switch (type.getName()) {
+            case "date":
+                return doc.createTextNode("2002-05-30");
+            case "dateTime":
+                return doc.createTextNode("2002-05-30T09:00:00");
             case "string":
                 if (!enumValues.isEmpty()) {
                     return doc.createTextNode(enumValues.get(0));
