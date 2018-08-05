@@ -1,15 +1,22 @@
 package be.geoffrey.schemaparsing.grouping;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
-public class Choice extends ElementGroup implements StructurePart {
+public class Choice implements StructurePart {
 
-    public Choice(Choice sequence) {
-        super(sequence);
+    private List<StructurePart> parts;
+
+    public Choice(Choice choice) {
+        parts = choice.parts.stream()
+                .map(StructurePart::copy)
+                .collect(Collectors.toList());
     }
 
     public Choice(List<StructurePart> elements) {
-        super(elements);
+        parts = elements.stream()
+                .map(StructurePart::copy)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -19,6 +26,6 @@ public class Choice extends ElementGroup implements StructurePart {
 
     @Override
     public List<StructurePart> getUnderlyingElements() {
-        return super.getParts();
+        return parts;
     }
 }

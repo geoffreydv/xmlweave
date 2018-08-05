@@ -4,6 +4,5 @@ import java.util.List;
 
 public interface StructurePart {
     StructurePart copy();
-
     List<StructurePart> getUnderlyingElements();
 }

@@ -1,15 +1,22 @@
 package be.geoffrey.schemaparsing.grouping;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
-public class Sequence extends ElementGroup implements StructurePart {
+public class Sequence implements StructurePart {
+
+    private List<StructurePart> parts;
 
     public Sequence(Sequence sequence) {
-        super(sequence);
+        parts = sequence.parts.stream()
+                .map(StructurePart::copy)
+                .collect(Collectors.toList());
     }
 
     public Sequence(List<StructurePart> elements) {
-        super(elements);
+        parts = elements.stream()
+                .map(StructurePart::copy)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -19,6 +26,6 @@ public class Sequence extends ElementGroup implements StructurePart {
 
     @Override
     public List<StructurePart> getUnderlyingElements() {
-        return super.getParts();
+        return parts;
     }
 }

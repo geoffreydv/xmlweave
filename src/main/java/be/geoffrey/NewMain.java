@@ -26,7 +26,7 @@ public class NewMain {
 
     public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException, TransformerException {
 
-        // TODO: Add support for ATTRIBUTES as well :D
+        // TODO: Add support for attributes!
         // TODO: Add config for regex types
         // ---------- Essential: Generate a completely valid XML for a given XSD element
         // TODO: Add configuration to enable switching for implementations
