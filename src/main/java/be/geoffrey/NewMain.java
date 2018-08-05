@@ -32,7 +32,6 @@ public class NewMain {
 
     public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException, TransformerException {
 
-        // TODO: Improve choice support, sometimes it picks a random implementation because possible types are a set
         // TODO: Better attribute parsing, also make sure all elements that define attributes are found
         // TODO: Add configuration to enable switching for implementations
         // TODO: Add configuration to enable switching for choice tags
