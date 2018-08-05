@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class NamedStructure {
+public class NamedStructure implements Comparable<NamedStructure> {
 
     private String namespace;
     private String name;
@@ -126,5 +126,16 @@ public class NamedStructure {
         addAllAttributesAtBeginning(baseClass.getAttributes().stream()
                 .map(XmlAttribute::new)
                 .collect(Collectors.toList()));
+    }
+
+    @Override
+    public int compareTo(NamedStructure o) {
+        int nsCompare = namespace.compareTo(o.namespace);
+
+        if (nsCompare != 0) {
+            return nsCompare;
+        }
+
+        return name.compareTo(o.name);
     }
 }

@@ -1,21 +1,15 @@
 package be.geoffrey.schemaparsing;
 
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class SchemaParsingContext {
-
-    // TODO: ik betwijfel dat elements een namespace hebben.. moet waarschijnlijk weg
 
     private String fileName;
 
     private Map<String, NamedStructure> knownNamedStructures = new HashMap<>();
     private Map<String, XmlElement> knownElementTypes = new HashMap<>();
-    // TODO: Make a "CONCRETE extension of base class" (multiple levels of inheritance nesting with abstracts)
     private Map<String, Set<String>> extensionsOfBaseClass = new HashMap<>();
 
     private Set<String> parsedFiles = new HashSet<>();
@@ -58,7 +52,7 @@ public class SchemaParsingContext {
         String baseClassIdentity = thisType.getExtensionOf().identity();
 
         if (!extensionsOfBaseClass.containsKey(baseClassIdentity)) {
-            extensionsOfBaseClass.put(baseClassIdentity, new HashSet<>());
+            extensionsOfBaseClass.put(baseClassIdentity, new TreeSet<>());
         }
 
         this.extensionsOfBaseClass.get(baseClassIdentity).add(thisType.identity());
@@ -72,20 +66,19 @@ public class SchemaParsingContext {
         return knownNamedStructures.get(ns.identity());
     }
 
-    public Set<NamedStructure> getExtensionsOfBaseClass(String id) {
+    public SortedSet<NamedStructure> getExtensionsOfBaseClass(String id) {
 
         Set<String> concreteImplementationReferences = extensionsOfBaseClass.get(id);
 
         if (concreteImplementationReferences == null) {
-            return new HashSet<>();
+            return new TreeSet<>();
         }
-
-        // TODO: Think if also needed for elems?
 
         return concreteImplementationReferences
                 .stream()
                 .map(key -> knownNamedStructures.get(key))
-                .collect(Collectors.toSet());
+                .sorted()
+                .collect(Collectors.toCollection(TreeSet::new));
     }
 
     public boolean needsInheritanceEnhancement() {

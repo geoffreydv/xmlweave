@@ -36,6 +36,7 @@ public class NewMain {
         // TODO: Better attribute parsing, also make sure all elements that define attributes are found
         // TODO: Add configuration to enable switching for implementations
         // TODO: Add configuration to enable switching for choice tags
+        // TODO: Add minOccurs / maxOccurs support but just with 1 level, to enable mandatory / not mandatory
         // TODO: Add minOccurs / maxOccurs support, multi elements / path rendering with [0] etc
         // TODO: Add configuration to enable switching for minOccurs
         // TODO: Choices about minOccurs / maxOccurs etc :)

@@ -7,9 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class XmlElement {
@@ -175,7 +173,7 @@ public class XmlElement {
                                                                      NamedStructure base) {
 
         Set<NamedStructure> candidates = context.getExtensionsOfBaseClass(base.identity());
-        Set<NamedStructure> allDiscovered = new HashSet<>(candidates);
+        Set<NamedStructure> allDiscovered = new TreeSet<>(candidates);
         // Keep looping down the hierarchy until all of the concrete classes are discovered
 
         for (NamedStructure concreteClass : candidates) {
