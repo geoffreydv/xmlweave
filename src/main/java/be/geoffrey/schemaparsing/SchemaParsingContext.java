@@ -9,8 +9,8 @@ public class SchemaParsingContext {
     private String fileName;
 
     private Properties properties = new Properties();
-    private Map<String, NamedStructure> knownNamedStructures = new HashMap<>();
-    private Map<String, XmlElement> knownElementTypes = new HashMap<>();
+    private Map<String, NamedStructure> knownNamedStructures = new TreeMap<>();
+    private Map<String, XmlElement> knownElements = new TreeMap<>();
     private Map<String, Set<String>> extensionsOfBaseClass = new HashMap<>();
 
     private Set<String> parsedFiles = new HashSet<>();
@@ -36,7 +36,7 @@ public class SchemaParsingContext {
         this.classesThatRequireAddingBaseFields.addAll(schemaParsingContext.classesThatRequireAddingBaseFields);
         this.extensionsOfBaseClass.putAll(schemaParsingContext.extensionsOfBaseClass);
         this.knownNamedStructures.putAll(schemaParsingContext.knownNamedStructures);
-        this.knownElementTypes.putAll(schemaParsingContext.knownElementTypes);
+        this.knownElements.putAll(schemaParsingContext.knownElements);
     }
 
     public void addKnownNamedStructure(NamedStructure type) {
@@ -44,7 +44,7 @@ public class SchemaParsingContext {
     }
 
     public void addKnownRootElement(XmlElement element) {
-        this.knownElementTypes.put(element.identity(), element);
+        this.knownElements.put(element.identity(), element);
     }
 
     public void indicateElementRequiresInheritanceEnhancement(NamedStructure thisType) {
@@ -60,8 +60,12 @@ public class SchemaParsingContext {
         this.extensionsOfBaseClass.get(baseClassIdentity).add(thisType.identity());
     }
 
+    public Map<String, XmlElement> getKnownElements() {
+        return knownElements;
+    }
+
     public XmlElement getKnownElement(NameAndNamespace ns) {
-        return knownElementTypes.get(ns.identity());
+        return knownElements.get(ns.identity());
     }
 
     public NamedStructure lookupXmlStructure(NameAndNamespace ns) {
@@ -98,7 +102,6 @@ public class SchemaParsingContext {
         Set<String> remainingKeys = new HashSet<>(classesThatRequireAddingBaseFields);
 
         for (String key : classesThatRequireAddingBaseFields) {
-            // TODO: Add Elements as well?
             NamedStructure xmlTypeToEnhance = knownNamedStructures.get(key);
 
             NameAndNamespace extension = xmlTypeToEnhance.getExtensionOf();
@@ -130,7 +133,7 @@ public class SchemaParsingContext {
 
     public XmlElement getKnownElementByElementName(String elementName) {
 
-        Set<XmlElement> matches = knownElementTypes.values().stream()
+        Set<XmlElement> matches = knownElements.values().stream()
                 .filter(e -> e.getName().equals(elementName))
                 .collect(Collectors.toSet());
 
@@ -152,5 +155,9 @@ public class SchemaParsingContext {
         }
 
         throw new IllegalArgumentException("Could not uniquely identify a type with name " + typeName + ". Names found:" + matches.stream().map(e -> e.getNamespace() + "/" + e.getName()).collect(Collectors.toList()));
+    }
+
+    public Map<String, NamedStructure> getKnownNamedStructures() {
+        return knownNamedStructures;
     }
 }

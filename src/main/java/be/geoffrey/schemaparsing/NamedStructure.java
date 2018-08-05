@@ -32,6 +32,17 @@ public class NamedStructure implements Comparable<NamedStructure> {
         this.name = name;
     }
 
+    public String getBaseName() {
+        // TODO: Only use for testing, lame method
+        int split = name.indexOf("_");
+
+        if (split == -1) {
+            return name;
+        }
+
+        return name.substring(split + 1);
+    }
+
     public List<XmlAttribute> getAttributes() {
         return attributes;
     }

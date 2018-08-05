@@ -23,8 +23,12 @@ public final class SchemaParser {
     private SchemaParser() {
     }
 
+    public static SchemaParsingContext parseDirectChildrenOfSchema(File schemaFile) throws ParserConfigurationException, IOException, SAXException {
+        return parseDirectChildrenOfSchema(schemaFile, null, new SchemaParsingContext(schemaFile.getAbsolutePath(), null));
+    }
+
     public static SchemaParsingContext parseDirectChildrenOfSchema(File schemaFile, String schemaNamespaceOverride,
-                                                                    SchemaParsingContext previousMetadata) throws ParserConfigurationException, IOException, SAXException {
+                                                                   SchemaParsingContext previousMetadata) throws ParserConfigurationException, IOException, SAXException {
 
         SchemaParsingContext context = new SchemaParsingContext(schemaFile.getAbsolutePath(), previousMetadata);
 

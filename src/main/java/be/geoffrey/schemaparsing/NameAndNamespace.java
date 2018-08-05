@@ -1,8 +1,6 @@
 package be.geoffrey.schemaparsing;
 
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
 
 public class NameAndNamespace {
 
@@ -12,6 +10,17 @@ public class NameAndNamespace {
     public NameAndNamespace(String name, String namespace) {
         this.name = name;
         this.namespace = namespace;
+    }
+
+    public String getBaseName() {
+        // TODO: Only use for testing, lame method
+        int split = name.indexOf("_");
+
+        if(split == -1) {
+            return name;
+        }
+
+        return name.substring(split + 1);
     }
 
     public String getName() {
