@@ -57,6 +57,7 @@ public class NewMain {
         // TODO: Look into auto regex generation
         // TODO: FOR wsdl compares, be able to do a fake render, and return a list of every complexType that this element uses
         // TODO: Load documentation metadata / annotations etc from xsd
+        // ---------- Milestone einde: Throw every XSD against this thing to find issues
 
         String xsdPath = args[0];
         String elementName = args[1];
