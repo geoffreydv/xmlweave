@@ -223,7 +223,7 @@ public final class SchemaParser {
                                                                             Map<String, String> knownNamespaces) {
 
         return selectFirstOccurrenceOfAny(complexType, Lists.newArrayList(
-                "complexType", "simpleContent.extension", "complexContent.extension"
+                "simpleContent.extension", "complexContent.extension", ""
         ), knownNamespaces);
     }
 

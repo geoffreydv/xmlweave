@@ -146,7 +146,7 @@ public class SchemaParsingContext {
         throw new IllegalArgumentException("Could not uniquely identify an element with name " + elementName + ". Names found:" + matches.stream().map(e -> e.getNamespace() + "/" + e.getName()).collect(Collectors.toList()));
     }
 
-    public NamedStructure getKnownTypeByTypeName(String typeName) {
+    public NamedStructure getKnownNamedStructureByName(String typeName) {
 
         Set<NamedStructure> matches = knownNamedStructures.values().stream()
                 .filter(e -> e.getName().equals(typeName))
