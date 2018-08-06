@@ -27,7 +27,7 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
-public class NewMain {
+public class GenerateExampleXml {
 
     public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException, TransformerException {
 

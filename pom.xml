@@ -47,7 +47,7 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>libs/</classpathPrefix>
-                            <mainClass>be.geoffrey.NewMain</mainClass>
+                            <mainClass>be.geoffrey.GenerateExampleXml</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
