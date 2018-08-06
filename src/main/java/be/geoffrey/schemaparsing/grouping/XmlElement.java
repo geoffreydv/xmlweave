@@ -75,7 +75,7 @@ public class XmlElement implements StructurePart {
         if (BasicTypeUtil.isReferenceToBasicType(structureReference)) {
 
             Element simpleElement = doc.createElement(name);
-            simpleElement.appendChild(BasicTypeUtil.generateContentsOfABasicType(structureReference, doc));
+            simpleElement.appendChild(BasicTypeUtil.generateContentsOfABasicType(structureReference, doc, properties));
             return simpleElement;
 
         } else {
@@ -88,7 +88,7 @@ public class XmlElement implements StructurePart {
 
             if (structure.isBasedOnBasicType()) {
                 Element simpleElement = doc.createElement(name);
-                simpleElement.appendChild(BasicTypeUtil.generateContentsOfACustomBasicType(structure, doc));
+                simpleElement.appendChild(BasicTypeUtil.generateContentsOfACustomBasicType(structure, doc, properties));
                 return simpleElement;
             }
 

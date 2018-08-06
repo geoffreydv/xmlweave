@@ -6,6 +6,7 @@ import org.w3c.dom.Node;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 public final class BasicTypeUtil {
 
@@ -14,24 +15,25 @@ public final class BasicTypeUtil {
     private BasicTypeUtil() {
     }
 
-    public static Node generateContentsOfABasicType(NameAndNamespace basicType, Document doc) {
-        return generateContentsOfACustomBasicType(basicType, null, doc, new ArrayList<>(), null);
+    public static Node generateContentsOfABasicType(NameAndNamespace basicType, Document doc, Properties properties) {
+        return generateContentsOfACustomBasicType(basicType, null, doc, new ArrayList<>(), null, properties);
     }
 
-    public static Node generateContentsOfACustomBasicType(NamedStructure namedStructure, Document doc) {
+    public static Node generateContentsOfACustomBasicType(NamedStructure namedStructure, Document doc, Properties properties) {
         return generateContentsOfACustomBasicType(namedStructure.getBasedOnBasicType(),
                 namedStructure.reference(),
                 doc,
                 namedStructure.getPossibleEnumValues(),
-                namedStructure.getBasedOnRegex());
+                namedStructure.getBasedOnRegex(), properties);
     }
 
-    private static Node generateContentsOfACustomBasicType(NameAndNamespace type,
-                                                           NameAndNamespace customType,
+    private static Node generateContentsOfACustomBasicType(NameAndNamespace basicType,
+                                                           NameAndNamespace ownExtensionOfBasicType,
                                                            Document doc,
                                                            List<String> enumValues,
-                                                           String regex) {
-        switch (type.getName()) {
+                                                           String regex,
+                                                           Properties properties) {
+        switch (basicType.getName()) {
             case "date":
                 return doc.createTextNode("2002-05-30");
             case "dateTime":
@@ -40,8 +42,13 @@ public final class BasicTypeUtil {
                 if (!enumValues.isEmpty()) {
                     return doc.createTextNode(enumValues.get(0));
                 } else if (regex != null) {
-                    if(customType != null) {
-                        return doc.createTextNode("Something that matches regex pattern of '" + customType.getName() + "': " + regex);
+                    if (ownExtensionOfBasicType != null) {
+
+                        if (properties.containsKey("regexes." + ownExtensionOfBasicType.getName())) {
+                            return doc.createTextNode(properties.getProperty("regexes." + ownExtensionOfBasicType.getName()));
+                        }
+
+                        return doc.createTextNode("Something that matches regex pattern of '" + ownExtensionOfBasicType.getName() + "': " + regex);
                     } else {
                         return doc.createTextNode("Something that matches regex pattern " + regex);
                     }
@@ -58,7 +65,7 @@ public final class BasicTypeUtil {
                 return doc.createTextNode("12345.65432");
         }
 
-        throw new IllegalArgumentException("Unknown basic type: " + type);
+        throw new IllegalArgumentException("Unknown basic type: " + basicType);
     }
 
     public static boolean isReferenceToBasicType(NameAndNamespace type) {

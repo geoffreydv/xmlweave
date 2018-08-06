@@ -57,6 +57,7 @@ public class NewMain {
         // TODO: Validations etc, same class defined twice bvb
         //     - TODO: 2x hetzelfde geïmporteerd maar onder andere NS of whatever
         // TODO: Load documentation metadata / annotations etc from xsd
+        // TODO: MaxLength checks etc :)
         // TODO: Look into auto regex generation
         // TODO: FOR wsdl compares, be able to do a fake render, and return a list of every complexType that this element uses
         // TODO: No xmlns defined?
