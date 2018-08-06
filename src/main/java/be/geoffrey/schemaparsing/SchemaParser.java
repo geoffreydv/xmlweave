@@ -207,11 +207,8 @@ public final class SchemaParser {
         if (elementDefinitionWrapper != null) {
             List<StructurePart> collectedStructureParts = parseStructurePartsInWrapper(elementDefinitionWrapper, knownNamespaces, context);
             namedStructure.addStructurePartsAtBeginning(collectedStructureParts);
-        } else {
-            System.out.println("WARNING: No fields were found for type " + namedStructure.getName() + ", better check if this is correct :) " + context.getFileName());
         }
 
-        // TODO: Continue here...
         Element attributeWrapper = findXmlElementThatCanContainAttributeDefinitions(complexType, knownNamespaces);
         if (attributeWrapper != null) {
             List<XmlAttribute> collectedAttributes = parseDirectChildAttributesOfWrapper(attributeWrapper, knownNamespaces);
