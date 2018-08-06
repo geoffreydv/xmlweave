@@ -43,6 +43,7 @@ public class NewMain {
         // TODO: Make "reference" classes instead of NameAndNamespace (not clear)
         // TODO: Allow using "ref"
         // TODO: XS:ANY support
+        // TODO: Add 'Default mode', right now it's 'fill as much as possible'
         // TODO: Same types get loaded multiple times I think (saw 2 breaks when parsing complexType 'GeneriekeOpdrachtType'
         // TODO: Add caching metadata to speed up generation
         // TODO: Allow imports without schemaLocation to define it manually
