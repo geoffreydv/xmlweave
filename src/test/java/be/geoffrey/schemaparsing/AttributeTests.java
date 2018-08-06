@@ -9,7 +9,6 @@ import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-// TODO: Add test cases with nesting and inheritance
 public class AttributeTests {
 
     @Test
