@@ -112,28 +112,30 @@ public class XmlElement implements StructurePart {
 
             if (structure.isAbstractType()) {
                 NamedStructure concreteImplementationChoice = concreteAsList.get(choiceIndex);
-
-                System.out.println("[CHOICE] " + currentPath);
-
-                String choiceOverview = "\tAll choices are: \n";
-
-                for (int i = 0; i < concreteAsList.size(); i++) {
-                    NamedStructure possibility = concreteAsList.get(i);
-                    choiceOverview += "\t\t [" + i + "] " + possibility.getName();
-                    if (choiceIndex == i) {
-                        choiceOverview += " <-- Selected";
-                    }
-                    choiceOverview += "\n";
-                }
-
-                System.out.println(choiceOverview);
+                printChoiceMenu(currentPath, choiceIndex, concreteAsList);
                 return buildElementFromStructure(doc, context, concreteImplementationChoice, currentPath, properties);
             } else {
-                System.out.println("[CHOICE] " + currentPath + ": Selected " + structure.getName() + " as the implementation for " + structure.getName() + " but a more specific class can be selected");
-                System.out.println("\tOther choices are: " + concreteImplementationChoices.stream().map(NamedStructure::getName).collect(Collectors.toList()));
-                return buildElementFromStructure(doc, context, structure, currentPath, properties);
+                concreteAsList.add(0, structure);
+                NamedStructure implementationChoice = concreteAsList.get(choiceIndex);
+                printChoiceMenu(currentPath, choiceIndex, concreteAsList);
+                return buildElementFromStructure(doc, context, implementationChoice, currentPath, properties);
             }
         }
+    }
+
+    private void printChoiceMenu(NavNode currentPath, int selectedIndex, List<NamedStructure> options) {
+        String choiceMenu = "\tAll choices are: \n";
+        for (int i = 0; i < options.size(); i++) {
+            NamedStructure possibility = options.get(i);
+            choiceMenu += "\t\t [" + i + "] " + possibility.getName();
+            if (selectedIndex == i) {
+                choiceMenu += " <-- Selected";
+            }
+            choiceMenu += "\n";
+        }
+
+        System.out.println("[CHOICE] " + currentPath);
+        System.out.println(choiceMenu);
     }
 
     private void appendElementsForEveryPartInStructure(Element me,
