@@ -7,7 +7,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class XmlElement implements StructurePart {
 
@@ -93,9 +92,9 @@ public class XmlElement implements StructurePart {
                 return simpleElement;
             }
 
-            SortedSet<NamedStructure> concreteImplementationChoices = findConcreteImplementationCandidates(context, structure);
+            SortedSet<NamedStructure> moreSpecificImplementations = findConcreteImplementationCandidates(context, structure);
 
-            if (concreteImplementationChoices.isEmpty()) {
+            if (moreSpecificImplementations.isEmpty()) {
 
                 // Can this element be defined in multiple ways?
 
@@ -106,21 +105,27 @@ public class XmlElement implements StructurePart {
                 return buildElementFromStructure(doc, context, structure, currentPath, properties);
             }
 
-            int choiceIndex = 0;
+            List<NamedStructure> concreteAsList = new ArrayList<>(moreSpecificImplementations);
 
-            List<NamedStructure> concreteAsList = new ArrayList<>(concreteImplementationChoices);
-
-            if (structure.isAbstractType()) {
-                NamedStructure concreteImplementationChoice = concreteAsList.get(choiceIndex);
-                printChoiceMenu(currentPath, choiceIndex, concreteAsList);
-                return buildElementFromStructure(doc, context, concreteImplementationChoice, currentPath, properties);
-            } else {
-                concreteAsList.add(0, structure);
-                NamedStructure implementationChoice = concreteAsList.get(choiceIndex);
-                printChoiceMenu(currentPath, choiceIndex, concreteAsList);
-                return buildElementFromStructure(doc, context, implementationChoice, currentPath, properties);
+            if (!structure.isAbstractType()) {
+                concreteAsList.add(0, structure); // Add this type as an option as well as it is not abstract and can be used
             }
+
+            int choiceIndex = getChoiceForDecision(currentPath, properties);
+            NamedStructure concreteImplementationChoice = concreteAsList.get(choiceIndex);
+            printChoiceMenu(currentPath, choiceIndex, concreteAsList);
+            return buildElementFromStructure(doc, context, concreteImplementationChoice, currentPath, properties);
         }
+    }
+
+    private int getChoiceForDecision(NavNode currentPath, Properties properties) {
+
+        if(properties.containsKey("choices." + currentPath)) {
+            String index = properties.getProperty("choices." + currentPath);
+            return Integer.valueOf(index);
+        }
+
+        return 0;
     }
 
     private void printChoiceMenu(NavNode currentPath, int selectedIndex, List<NamedStructure> options) {
