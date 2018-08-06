@@ -39,7 +39,6 @@ public class NewMain {
         // TODO: Add types for attributes, now everything is a string
         // TODO: Add configuration to enable switching for minOccurs
         // TODO: Choices about minOccurs / maxOccurs etc :)
-        // TODO: Add regex configuration support to provide a default etc
         // TODO: Allow adding defaults for type "Always choose x" when deciding
         // TODO: Make "reference" classes instead of NameAndNamespace (not clear)
         // TODO: Allow using "ref"
@@ -52,11 +51,11 @@ public class NewMain {
         // TODO: Use "Optional<T>" like a baws
         // TODO: Validations etc, same class defined twice bvb
         //     - TODO: 2x hetzelfde geïmporteerd maar onder andere NS of whatever
-        // TODO: Load documentation metadata / annotations etc from xsd
         // TODO: MaxLength checks etc :)
+        // TODO: Do an ultimate test where every file is validated against appropriate XSD with XMLStarlet
         // TODO: Look into auto regex generation
         // TODO: FOR wsdl compares, be able to do a fake render, and return a list of every complexType that this element uses
-        // TODO: No xmlns defined?
+        // TODO: Load documentation metadata / annotations etc from xsd
 
         String xsdPath = args[0];
         String elementName = args[1];

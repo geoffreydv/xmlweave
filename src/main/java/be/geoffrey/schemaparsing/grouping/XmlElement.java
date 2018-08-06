@@ -95,9 +95,6 @@ public class XmlElement implements StructurePart {
             SortedSet<NamedStructure> moreSpecificImplementations = findConcreteImplementationCandidates(context, structure);
 
             if (moreSpecificImplementations.isEmpty()) {
-
-                // Can this element be defined in multiple ways?
-
                 if (structure.isAbstractType()) {
                     throw new IllegalArgumentException("No implementations were found for abstract class " + structure.identity());
                 }
