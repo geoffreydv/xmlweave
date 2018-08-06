@@ -31,8 +31,8 @@ public class NewMain {
 
     public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException, TransformerException {
 
-        // TODO: Add config for regex types
-        // ---------- Essential: Generate a completely valid XML for a given XSD element
+        // TODO: Correct namespace handling (define at top)
+        // ---------- Milestone 1: Generate a completely valid XML for a given XSD element
         // TODO: Add configuration to enable switching for implementations
         // TODO: Add configuration to enable switching for choice tags
         // TODO: Add minOccurs / maxOccurs support but just with 1 level, to enable mandatory / not mandatory
@@ -47,12 +47,9 @@ public class NewMain {
         // TODO: XS:ANY support
         // TODO: Same types get loaded multiple times I think (saw 2 breaks when parsing complexType 'GeneriekeOpdrachtType'
         // TODO: Add caching metadata to speed up generation
-        // TODO: Correct namespace handling (define at top)
         // TODO: Allow imports without schemaLocation to define it manually
         // TODO: Come up with a good config file format
         // TODO: Afhandelen "default values" van types
-        // TODO: Write some utility methods to find tags bla.bla2.bla3 that returns tag
-        // TODO: Make a class out of the searching etc, with context as a private field...
         // TODO: Use "Optional<T>" like a baws
         // TODO: Validations etc, same class defined twice bvb
         //     - TODO: 2x hetzelfde geïmporteerd maar onder andere NS of whatever
