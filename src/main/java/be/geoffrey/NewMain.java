@@ -21,9 +21,11 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.Properties;
 
 public class NewMain {
 
@@ -36,6 +38,7 @@ public class NewMain {
         // TODO: Add minOccurs / maxOccurs support but just with 1 level, to enable mandatory / not mandatory
         // TODO: Add minOccurs / maxOccurs support, multi elements / path rendering with [0] etc
         // TODO: Add idea of lists etc to path traversal
+        // TODO: Add types for attributes, now everything is a string
         // TODO: Add configuration to enable switching for minOccurs
         // TODO: Choices about minOccurs / maxOccurs etc :)
         // TODO: Add regex configuration support to provide a default etc
@@ -61,6 +64,10 @@ public class NewMain {
         String xsdPath = args[0];
         String elementName = args[1];
         String resultFile = args[2];
+        String propertiesFilePath = args[3];
+
+        Properties properties = new Properties();
+        properties.load(new FileInputStream(new File(propertiesFilePath)));
 
         SchemaFinder sf = new SchemaFinder();
         sf.build(xsdPath);
@@ -74,12 +81,15 @@ public class NewMain {
         SchemaParsingContext results = parser.getResults();
 
         if (results != null) {
-            String resultXml = generateXml(results, null, elementName);
+            String resultXml = generateXml(results, null, elementName, properties);
             FileUtils.writeStringToFile(new File(resultFile), resultXml, StandardCharsets.UTF_8);
         }
     }
 
-    private static String generateXml(SchemaParsingContext context, String ns, String elementName) throws TransformerException, ParserConfigurationException {
+    private static String generateXml(SchemaParsingContext context,
+                                      String ns,
+                                      String elementName,
+                                      Properties decisionProperties) throws TransformerException, ParserConfigurationException {
 
         XmlElement element;
 
@@ -95,7 +105,7 @@ public class NewMain {
         Document doc = docBuilder.newDocument();
 
         // root elements
-        Element rootElement = element.render(doc, context, null);
+        Element rootElement = element.render(doc, context, null, decisionProperties);
         doc.appendChild(rootElement);
 
         // write the content into xml file

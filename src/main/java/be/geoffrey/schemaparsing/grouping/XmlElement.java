@@ -6,10 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class XmlElement implements StructurePart {
@@ -65,7 +62,7 @@ public class XmlElement implements StructurePart {
         return namespace + "/" + name;
     }
 
-    public Element render(Document doc, SchemaParsingContext context, NavNode parentNode) {
+    public Element render(Document doc, SchemaParsingContext context, NavNode parentNode, Properties properties) {
 
         NavNode currentPath = new NavNode(parentNode, structureReference, name);
 
@@ -96,7 +93,7 @@ public class XmlElement implements StructurePart {
                 return simpleElement;
             }
 
-            Set<NamedStructure> concreteImplementationChoices = findConcreteImplementationCandidates(context, structure);
+            SortedSet<NamedStructure> concreteImplementationChoices = findConcreteImplementationCandidates(context, structure);
 
             if (concreteImplementationChoices.isEmpty()) {
 
@@ -106,20 +103,36 @@ public class XmlElement implements StructurePart {
                     throw new IllegalArgumentException("No implementations were found for abstract class " + structure.identity());
                 }
 
-                return buildElementFromStructure(doc, context, structure, currentPath);
+                return buildElementFromStructure(doc, context, structure, currentPath, properties);
             }
 
+            int choiceIndex = 0;
+
+            List<NamedStructure> concreteAsList = new ArrayList<>(concreteImplementationChoices);
+
             if (structure.isAbstractType()) {
-                NamedStructure concreteImplementationChoice = concreteImplementationChoices.iterator().next();
-                System.out.println("[CHOICE] " + currentPath + ": Selected " + concreteImplementationChoice.getName() + " as the implementation of type '" + structure.getName() + "'");
-                System.out.println("\tAll choices are: " + concreteImplementationChoices.stream().map(NamedStructure::getName).collect(Collectors.toList()));
-                return buildElementFromStructure(doc, context, concreteImplementationChoice, currentPath);
+                NamedStructure concreteImplementationChoice = concreteAsList.get(choiceIndex);
+
+                System.out.println("[CHOICE] " + currentPath);
+
+                String choiceOverview = "\tAll choices are: \n";
+
+                for (int i = 0; i < concreteAsList.size(); i++) {
+                    NamedStructure possibility = concreteAsList.get(i);
+                    choiceOverview += "\t\t [" + i + "] " + possibility.getName();
+                    if (choiceIndex == i) {
+                        choiceOverview += " <-- Selected";
+                    }
+                    choiceOverview += "\n";
+                }
+
+                System.out.println(choiceOverview);
+                return buildElementFromStructure(doc, context, concreteImplementationChoice, currentPath, properties);
             } else {
                 System.out.println("[CHOICE] " + currentPath + ": Selected " + structure.getName() + " as the implementation for " + structure.getName() + " but a more specific class can be selected");
                 System.out.println("\tOther choices are: " + concreteImplementationChoices.stream().map(NamedStructure::getName).collect(Collectors.toList()));
-                return buildElementFromStructure(doc, context, structure, currentPath);
+                return buildElementFromStructure(doc, context, structure, currentPath, properties);
             }
-
         }
     }
 
@@ -127,27 +140,29 @@ public class XmlElement implements StructurePart {
                                                        List<StructurePart> structureParts,
                                                        Document doc,
                                                        SchemaParsingContext context,
-                                                       NavNode thisNode) {
+                                                       NavNode thisNode,
+                                                       Properties properties) {
 
         for (StructurePart structurePart : structureParts) {
             if (XmlElement.class.isAssignableFrom(structurePart.getClass())) {
                 // Sometimes it's a plain element...
-                renderChildElement(doc, context, thisNode, me, (XmlElement) structurePart);
+                renderChildElement(doc, context, thisNode, me, (XmlElement) structurePart, properties);
 
             } else if (Sequence.class.isAssignableFrom(structurePart.getClass())) {
                 // Sometimes it's a sequence, in this case we append every item in the sequence
                 List<StructurePart> partsInSequence = structurePart.getUnderlyingElements();
-                appendElementsForEveryPartInStructure(me, partsInSequence, doc, context, thisNode);
+                appendElementsForEveryPartInStructure(me, partsInSequence, doc, context, thisNode, properties);
 
             } else if (Choice.class.isAssignableFrom(structurePart.getClass())) {
 
+                // TODO: Check inheritance here.. I think that when 1st item of a choice is abstract for example, implementations are not searched...
                 // Pick the first one... // TODO: Add selecting behavior here
                 List<StructurePart> partsAvailableToChooseFrom = structurePart.getUnderlyingElements();
                 StructurePart firstPart = partsAvailableToChooseFrom.get(0);
-                appendElementsForEveryPartInStructure(me, Lists.newArrayList(firstPart) , doc, context, thisNode);
+                appendElementsForEveryPartInStructure(me, Lists.newArrayList(firstPart), doc, context, thisNode, properties);
 
                 System.out.println("HMM");
-                // TODO: Find a way to visualize this (a choice can contain 2 elements and a sequence for example)
+                // TODO: Find a way to visualize this (a choice can contain 2 elements and a sequence for example), working with an index would be cool
                 System.out.println("[CHOICE] Made a choice for " + thisNode);
 //                List<String> allPossibilities = firstPart.getUnderlyingElements().stream()
 //                        .map(XmlElement::getName)
@@ -164,7 +179,8 @@ public class XmlElement implements StructurePart {
     private Element buildElementFromStructure(Document doc,
                                               SchemaParsingContext context,
                                               NamedStructure structureToUse,
-                                              NavNode thisNode) {
+                                              NavNode thisNode,
+                                              Properties properties) {
 
         Element me = doc.createElement(name);
 
@@ -172,7 +188,7 @@ public class XmlElement implements StructurePart {
             me.setAttribute(xmlAttribute.getName(), "RANDOM ATTRIBUTE VALUE"); // TODO: Verder uitwerken / type bepalen etc...
         }
 
-        appendElementsForEveryPartInStructure(me, structureToUse.getStructureParts(), doc, context, thisNode);
+        appendElementsForEveryPartInStructure(me, structureToUse.getStructureParts(), doc, context, thisNode, properties);
 
         return me;
     }
@@ -181,9 +197,10 @@ public class XmlElement implements StructurePart {
                                     SchemaParsingContext context,
                                     NavNode thisNode,
                                     Element me,
-                                    XmlElement xmlElement) {
+                                    XmlElement xmlElement,
+                                    Properties properties) {
 
-        Element element = xmlElement.render(doc, context, thisNode);
+        Element element = xmlElement.render(doc, context, thisNode, properties);
         if (element != null) {
             me.appendChild(element);
         }
@@ -205,11 +222,11 @@ public class XmlElement implements StructurePart {
         this.maxOccurs = maxOccurs;
     }
 
-    private Set<NamedStructure> findConcreteImplementationCandidates(SchemaParsingContext context,
-                                                                     NamedStructure base) {
+    private SortedSet<NamedStructure> findConcreteImplementationCandidates(SchemaParsingContext context,
+                                                                           NamedStructure base) {
 
         Set<NamedStructure> candidates = context.getExtensionsOfBaseClass(base.identity());
-        Set<NamedStructure> allDiscovered = new TreeSet<>(candidates);
+        SortedSet<NamedStructure> allDiscovered = new TreeSet<>(candidates);
         // Keep looping down the hierarchy until all of the concrete classes are discovered
 
         for (NamedStructure concreteClass : candidates) {
