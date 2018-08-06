@@ -44,6 +44,7 @@ public class NewMain {
         // TODO: Add regex configuration support to provide a default etc
         // TODO: Allow adding defaults for type "Always choose x" when deciding
         // TODO: Make "reference" classes instead of NameAndNamespace (not clear)
+        // TODO: Allow using "ref"
         // TODO: XS:ANY support
         // TODO: Same types get loaded multiple times I think (saw 2 breaks when parsing complexType 'GeneriekeOpdrachtType'
         // TODO: Add caching metadata to speed up generation

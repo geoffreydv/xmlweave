@@ -114,7 +114,13 @@ public class XmlElement implements StructurePart {
             int choiceIndex = getChoiceForDecision(currentPath, properties);
             NamedStructure concreteImplementationChoice = concreteAsList.get(choiceIndex);
             printChoiceMenu(currentPath, choiceIndex, concreteAsList);
-            return buildElementFromStructure(doc, context, concreteImplementationChoice, currentPath, properties);
+            Element element = buildElementFromStructure(doc, context, concreteImplementationChoice, currentPath, properties);
+
+            element.setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+            element.setAttribute("xmlns:spec", concreteImplementationChoice.getNamespace());
+            element.setAttribute("xsi:type", "spec:" + concreteImplementationChoice.getName());
+
+            return element;
         }
     }
 
@@ -187,6 +193,7 @@ public class XmlElement implements StructurePart {
                                               NamedStructure structureToUse,
                                               NavNode thisNode,
                                               Properties properties) {
+
 
         Element me = doc.createElement(name);
 
