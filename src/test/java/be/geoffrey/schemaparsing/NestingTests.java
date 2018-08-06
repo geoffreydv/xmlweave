@@ -17,7 +17,9 @@ public class NestingTests {
         ClassLoader classLoader = getClass().getClassLoader();
         File file = new File(classLoader.getResource("multi_level_test.xsd").getFile());
 
-        SchemaParsingContext ctx = SchemaParser.parseDirectChildrenOfSchema(file);
+        SchemaParser parser = new SchemaParser();
+        parser.parseSchema(file);
+        SchemaParsingContext ctx = parser.getResults();
 
         assertThat(ctx.getKnownNamedStructures().values())
                 .extracting("baseName")
@@ -29,7 +31,9 @@ public class NestingTests {
         ClassLoader classLoader = getClass().getClassLoader();
         File file = new File(classLoader.getResource("multi_level_ifrs9.xsd").getFile());
 
-        SchemaParsingContext ctx = SchemaParser.parseDirectChildrenOfSchema(file);
+        SchemaParser parser = new SchemaParser();
+        parser.parseSchema(file);
+        SchemaParsingContext ctx = parser.getResults();
 
         assertThat(ctx.getKnownNamedStructures().values())
                 .extracting("baseName")

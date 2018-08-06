@@ -6,7 +6,6 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.groups.Tuple.tuple;
@@ -20,7 +19,9 @@ public class SingleLevelTests {
         ClassLoader classLoader = getClass().getClassLoader();
         File file = new File(classLoader.getResource("single_level_tests.xsd").getFile());
 
-        SchemaParsingContext ctx = SchemaParser.parseDirectChildrenOfSchema(file);
+        SchemaParser parser = new SchemaParser();
+        parser.parseSchema(file);
+        SchemaParsingContext ctx = parser.getResults();
 
         assertThat(ctx.getKnownElements().values())
                 .extracting("name", "structureReference.baseName")

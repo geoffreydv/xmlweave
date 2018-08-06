@@ -67,18 +67,16 @@ public class NewMain {
         SchemaFinder sf = new SchemaFinder();
         sf.build(xsdPath);
 
-        SchemaParsingContext context = null;
+        SchemaParser parser = new SchemaParser();
 
         for (String schemaPath : sf.getFoundSchemas()) {
-            context = SchemaParser.parseDirectChildrenOfSchema(new File(schemaPath), null, context);
-
-            while (context.needsInheritanceEnhancement()) {
-                context.addAllDataOfBaseClassesToConcreteImplementations();
-            }
+            parser.parseSchema(new File(schemaPath));
         }
 
-        if (context != null) {
-            String resultXml = generateXml(context, null, elementName);
+        SchemaParsingContext results = parser.getResults();
+
+        if (results != null) {
+            String resultXml = generateXml(results, null, elementName);
             FileUtils.writeStringToFile(new File(resultFile), resultXml, StandardCharsets.UTF_8);
         }
     }

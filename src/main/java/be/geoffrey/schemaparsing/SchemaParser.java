@@ -21,15 +21,18 @@ public final class SchemaParser {
 
     private static final String SCHEMA_NS = "SCHEMA_NS";
 
-    private SchemaParser() {
+    private SchemaParsingContext context;
+
+    public SchemaParser() {
+        this.context = null;
     }
 
-    public static SchemaParsingContext parseDirectChildrenOfSchema(File schemaFile) throws ParserConfigurationException, IOException, SAXException {
-        return parseDirectChildrenOfSchema(schemaFile, null, new SchemaParsingContext(schemaFile.getAbsolutePath(), null));
+    public void parseSchema(File schemaFile) throws ParserConfigurationException, IOException, SAXException {
+        this.context = parseSchema(schemaFile, null, this.context);
     }
 
-    public static SchemaParsingContext parseDirectChildrenOfSchema(File schemaFile, String schemaNamespaceOverride,
-                                                                   SchemaParsingContext previousMetadata) throws ParserConfigurationException, IOException, SAXException {
+    private SchemaParsingContext parseSchema(File schemaFile, String schemaNamespaceOverride,
+                                             SchemaParsingContext previousMetadata) throws ParserConfigurationException, IOException, SAXException {
 
         SchemaParsingContext context = new SchemaParsingContext(schemaFile.getAbsolutePath(), previousMetadata);
 
@@ -76,7 +79,7 @@ public final class SchemaParser {
                         File includedFileReference = new File(schemaFile.getParentFile(), schemaLocation);
 
                         if (!context.isSchemaAlreadyParsed(includedFileReference.getAbsolutePath())) {
-                            context.addInfoFromOtherSchema(parseDirectChildrenOfSchema(includedFileReference, null, context));
+                            context.addInfoFromOtherSchema(parseSchema(includedFileReference, null, context));
                         }
                         break;
                     }
@@ -86,7 +89,7 @@ public final class SchemaParser {
                         File includedFileReference = new File(schemaFile.getParentFile(), schemaLocation);
 
                         if (!context.isSchemaAlreadyParsed(includedFileReference.getAbsolutePath())) {
-                            context.addInfoFromOtherSchema(parseDirectChildrenOfSchema(includedFileReference, overrideNs, context));
+                            context.addInfoFromOtherSchema(parseSchema(includedFileReference, overrideNs, context));
                         }
 
                         break;
@@ -96,6 +99,14 @@ public final class SchemaParser {
         }
 
         context.indicateFileParsingComplete();
+        return context;
+    }
+
+    public SchemaParsingContext getResults() {
+        while (context.needsInheritanceEnhancement()) {
+            context.addAllDataOfBaseClassesToConcreteImplementations();
+        }
+
         return context;
     }
 
@@ -200,8 +211,9 @@ public final class SchemaParser {
             System.out.println("WARNING: No fields were found for type " + namedStructure.getName() + ", better check if this is correct :) " + context.getFileName());
         }
 
+        // TODO: Continue here...
         Element attributeWrapper = findXmlElementThatCanContainAttributeDefinitions(complexType, knownNamespaces);
-        if(attributeWrapper != null) {
+        if (attributeWrapper != null) {
             List<XmlAttribute> collectedAttributes = parseDirectChildAttributesOfWrapper(attributeWrapper, knownNamespaces);
             namedStructure.addAllAttributesAtBeginning(collectedAttributes);
         }
