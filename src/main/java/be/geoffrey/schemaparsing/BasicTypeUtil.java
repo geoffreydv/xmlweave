@@ -14,18 +14,20 @@ public final class BasicTypeUtil {
     private BasicTypeUtil() {
     }
 
-    public static Node generateContentsOfABasicType(NameAndNamespace type, Document doc) {
-        return generateContentsOfACustomBasicType(type, doc, new ArrayList<>(), null);
+    public static Node generateContentsOfABasicType(NameAndNamespace basicType, Document doc) {
+        return generateContentsOfACustomBasicType(basicType, null, doc, new ArrayList<>(), null);
     }
 
     public static Node generateContentsOfACustomBasicType(NamedStructure namedStructure, Document doc) {
         return generateContentsOfACustomBasicType(namedStructure.getBasedOnBasicType(),
+                namedStructure.reference(),
                 doc,
                 namedStructure.getPossibleEnumValues(),
                 namedStructure.getBasedOnRegex());
     }
 
     private static Node generateContentsOfACustomBasicType(NameAndNamespace type,
+                                                           NameAndNamespace customType,
                                                            Document doc,
                                                            List<String> enumValues,
                                                            String regex) {
@@ -38,7 +40,11 @@ public final class BasicTypeUtil {
                 if (!enumValues.isEmpty()) {
                     return doc.createTextNode(enumValues.get(0));
                 } else if (regex != null) {
-                    return doc.createTextNode("Something that matches regex: " + regex);
+                    if(customType != null) {
+                        return doc.createTextNode("Something that matches regex pattern of '" + customType.getName() + "': " + regex);
+                    } else {
+                        return doc.createTextNode("Something that matches regex pattern " + regex);
+                    }
                 }
                 return doc.createTextNode("anystring_anystring");
             case "int":
