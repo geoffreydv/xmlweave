@@ -191,20 +191,28 @@ public final class SchemaParser {
             namedStructure.setExtensionOf(parentClass);
         }
 
-        Element wrappingElement = findXmlElementThatCanContainElementDefinitions(complexType, knownNamespaces);
+        Element elementDefinitionWrapper = findXmlElementThatCanContainElementDefinitions(complexType, knownNamespaces);
 
-        if (wrappingElement != null) {
-
-            // TODO: Split in 2 cases: elements and attributes
-            // TODO: Voorlopig is dit: find classes that can wrap ELEMENTS
-            List<XmlAttribute> collectedAttributes = parseDirectChildAttributesOfWrapper(wrappingElement, knownNamespaces);
-            List<StructurePart> collectedStructureParts = parseStructurePartsInWrapper(wrappingElement, knownNamespaces, context);
-
+        if (elementDefinitionWrapper != null) {
+            List<StructurePart> collectedStructureParts = parseStructurePartsInWrapper(elementDefinitionWrapper, knownNamespaces, context);
             namedStructure.addStructurePartsAtBeginning(collectedStructureParts);
-            namedStructure.addAllAttributesAtBeginning(collectedAttributes);
         } else {
             System.out.println("WARNING: No fields were found for type " + namedStructure.getName() + ", better check if this is correct :) " + context.getFileName());
         }
+
+        Element attributeWrapper = findXmlElementThatCanContainAttributeDefinitions(complexType, knownNamespaces);
+        if(attributeWrapper != null) {
+            List<XmlAttribute> collectedAttributes = parseDirectChildAttributesOfWrapper(attributeWrapper, knownNamespaces);
+            namedStructure.addAllAttributesAtBeginning(collectedAttributes);
+        }
+    }
+
+    private static Element findXmlElementThatCanContainAttributeDefinitions(Element complexType,
+                                                                            Map<String, String> knownNamespaces) {
+
+        return selectFirstOccurrenceOfAny(complexType, Lists.newArrayList(
+                "complexType", "simpleContent.extension", "complexContent.extension"
+        ), knownNamespaces);
     }
 
     private static NameAndNamespace findBaseClassThisTypeIsExtending(Element complexType,

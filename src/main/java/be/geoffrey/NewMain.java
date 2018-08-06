@@ -1,6 +1,9 @@
 package be.geoffrey;
 
-import be.geoffrey.schemaparsing.*;
+import be.geoffrey.schemaparsing.NameAndNamespace;
+import be.geoffrey.schemaparsing.SchemaFinder;
+import be.geoffrey.schemaparsing.SchemaParser;
+import be.geoffrey.schemaparsing.SchemaParsingContext;
 import be.geoffrey.schemaparsing.grouping.XmlElement;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -27,6 +30,7 @@ public class NewMain {
     public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException, TransformerException {
 
         // TODO: Add support for attributes!
+        // TODO: Better attribute parsing, also make sure all elements that define attributes are found
         // TODO: Add config for regex types
         // ---------- Essential: Generate a completely valid XML for a given XSD element
         // TODO: Add configuration to enable switching for implementations
@@ -38,7 +42,6 @@ public class NewMain {
         // TODO: Choices about minOccurs / maxOccurs etc :)
         // TODO: Add regex configuration support to provide a default etc
         // TODO: Allow adding defaults for type "Always choose x" when deciding
-        // TODO: Better attribute parsing, also make sure all elements that define attributes are found
         // TODO: Make "reference" classes instead of NameAndNamespace (not clear)
         // TODO: XS:ANY support
         // TODO: Same types get loaded multiple times I think (saw 2 breaks when parsing complexType 'GeneriekeOpdrachtType'
