@@ -61,20 +61,20 @@ public class XmlElement implements StructurePart {
         return namespace + "/" + name;
     }
 
-    public Element render(Document doc, SchemaParsingContext context, NavNode parentNode, Properties properties) {
+    public Element render(Document doc, SchemaParsingContext context, NavNode parentNode, Properties properties, boolean rootElement) {
 
         NavNode currentPath = new NavNode(parentNode, structureReference, name);
 
         boolean recursing = currentPath.willStartRecursing();
 
         if (recursing) {
-            System.out.println("WARNING: Recursion detected: " + currentPath);
+            System.out.println("WARNING: Recursion detected: " + currentPath + ", breaking after one repetition");
             return null;
         }
 
         if (BasicTypeUtil.isReferenceToBasicType(structureReference)) {
 
-            Element simpleElement = doc.createElement(name);
+            Element simpleElement = createElement(doc, rootElement);
             simpleElement.appendChild(BasicTypeUtil.generateContentsOfABasicType(structureReference, doc, properties));
             return simpleElement;
 
@@ -87,7 +87,7 @@ public class XmlElement implements StructurePart {
             }
 
             if (structure.isBasedOnBasicType()) {
-                Element simpleElement = doc.createElement(name);
+                Element simpleElement = createElement(doc, rootElement);
                 simpleElement.appendChild(BasicTypeUtil.generateContentsOfACustomBasicType(structure, doc, properties));
                 return simpleElement;
             }
@@ -102,7 +102,7 @@ public class XmlElement implements StructurePart {
                     throw new IllegalArgumentException("No implementations were found for abstract class " + structure.identity());
                 }
 
-                return buildElementFromStructure(doc, context, structure, currentPath, properties);
+                return buildElementFromStructure(doc, context, structure, currentPath, properties, rootElement);
             }
 
             List<NamedStructure> concreteAsList = new ArrayList<>(moreSpecificImplementations);
@@ -114,13 +114,21 @@ public class XmlElement implements StructurePart {
             int choiceIndex = getChoiceForDecision(currentPath, properties);
             NamedStructure concreteImplementationChoice = concreteAsList.get(choiceIndex);
             printChoiceMenu(currentPath, choiceIndex, concreteAsList);
-            Element element = buildElementFromStructure(doc, context, concreteImplementationChoice, currentPath, properties);
+            Element element = buildElementFromStructure(doc, context, concreteImplementationChoice, currentPath, properties, false);
 
             element.setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
             element.setAttribute("xmlns:spec", concreteImplementationChoice.getNamespace());
             element.setAttribute("xsi:type", "spec:" + concreteImplementationChoice.getName());
 
             return element;
+        }
+    }
+
+    private Element createElement(Document doc, boolean rootElement) {
+        if(rootElement) {
+            return doc.createElementNS(namespace, "tmp:" + name);
+        } else {
+            return doc.createElement(name);
         }
     }
 
@@ -176,14 +184,6 @@ public class XmlElement implements StructurePart {
 
                 // TODO: Find a way to visualize this (a choice can contain 2 elements and a sequence for example), working with an index would be cool
                 System.out.println("[CHOICE] Made a choice for " + thisNode);
-//                List<String> allPossibilities = firstPart.getUnderlyingElements().stream()
-//                        .map(XmlElement::getName)
-//                        .collect(Collectors.toList());
-//
-//                System.out.println("[CHOICE] " + thisNode + ": Selected element " + elementChoice.getName() + " as the choice for " + structureToUse.getName() + ".");
-//                System.out.println("\tThe other choices are: " + allPossibilities);
-//
-//                renderChildElement(doc, context, thisNode, me, elementChoice);
             }
         }
     }
@@ -192,10 +192,11 @@ public class XmlElement implements StructurePart {
                                               SchemaParsingContext context,
                                               NamedStructure structureToUse,
                                               NavNode thisNode,
-                                              Properties properties) {
+                                              Properties properties,
+                                              boolean rootElement) {
 
 
-        Element me = doc.createElement(name);
+        Element me = createElement(doc, rootElement);
 
         for (XmlAttribute xmlAttribute : structureToUse.getAttributes()) {
             me.setAttribute(xmlAttribute.getName(), "RANDOM ATTRIBUTE VALUE"); // TODO: Verder uitwerken / type bepalen etc...
@@ -213,7 +214,7 @@ public class XmlElement implements StructurePart {
                                     XmlElement xmlElement,
                                     Properties properties) {
 
-        Element element = xmlElement.render(doc, context, thisNode, properties);
+        Element element = xmlElement.render(doc, context, thisNode, properties, false);
         if (element != null) {
             me.appendChild(element);
         }

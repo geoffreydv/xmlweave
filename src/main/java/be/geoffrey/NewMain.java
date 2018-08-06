@@ -31,9 +31,7 @@ public class NewMain {
 
     public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException, TransformerException {
 
-        // TODO: Correct namespace handling (define at top)
         // ---------- Milestone 1: Generate a completely valid XML for a given XSD element
-        // TODO: Add configuration to enable switching for implementations
         // TODO: Add configuration to enable switching for choice tags
         // TODO: Add minOccurs / maxOccurs support but just with 1 level, to enable mandatory / not mandatory
         // TODO: Add minOccurs / maxOccurs support, multi elements / path rendering with [0] etc
@@ -105,7 +103,8 @@ public class NewMain {
         Document doc = docBuilder.newDocument();
 
         // root elements
-        Element rootElement = element.render(doc, context, null, decisionProperties);
+        Element rootElement = element.render(doc, context, null, decisionProperties, true);
+
         doc.appendChild(rootElement);
 
         // write the content into xml file
