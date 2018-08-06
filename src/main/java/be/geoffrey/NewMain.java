@@ -85,20 +85,21 @@ public class NewMain {
     }
 
     private static String generateXml(SchemaParsingContext context,
-                                      String ns,
+                                      String namespaceToSearch,
                                       String elementName,
                                       Properties decisionProperties) throws TransformerException, ParserConfigurationException {
 
         XmlElement element;
 
-        if (StringUtils.isNotBlank(ns)) {
-            NameAndNamespace reference = new NameAndNamespace(elementName, ns);
+        if (StringUtils.isNotBlank(namespaceToSearch)) {
+            NameAndNamespace reference = new NameAndNamespace(elementName, namespaceToSearch);
             element = context.getKnownElement(reference);
         } else {
             element = context.getKnownElementByElementName(elementName);
         }
 
         DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+        docFactory.setNamespaceAware(true);
         DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
         Document doc = docBuilder.newDocument();
 

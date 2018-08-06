@@ -120,7 +120,7 @@ public class XmlElement implements StructurePart {
 
     private int getChoiceForDecision(NavNode currentPath, Properties properties) {
 
-        if(properties.containsKey("choices." + currentPath)) {
+        if (properties.containsKey("choices." + currentPath)) {
             String index = properties.getProperty("choices." + currentPath);
             return Integer.valueOf(index);
         }
@@ -168,7 +168,6 @@ public class XmlElement implements StructurePart {
                 StructurePart firstPart = partsAvailableToChooseFrom.get(0);
                 appendElementsForEveryPartInStructure(me, Lists.newArrayList(firstPart), doc, context, thisNode, properties);
 
-                System.out.println("HMM");
                 // TODO: Find a way to visualize this (a choice can contain 2 elements and a sequence for example), working with an index would be cool
                 System.out.println("[CHOICE] Made a choice for " + thisNode);
 //                List<String> allPossibilities = firstPart.getUnderlyingElements().stream()

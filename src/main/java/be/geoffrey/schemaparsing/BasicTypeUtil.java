@@ -53,7 +53,7 @@ public final class BasicTypeUtil {
                         return doc.createTextNode("Something that matches regex pattern " + regex);
                     }
                 }
-                return doc.createTextNode("anystring_anystring");
+                return doc.createTextNode("anystring");
             case "int":
             case "integer":
                 return doc.createTextNode("12345");
