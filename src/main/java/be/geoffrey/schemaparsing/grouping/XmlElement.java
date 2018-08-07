@@ -14,8 +14,8 @@ public class XmlElement implements StructurePart {
     private String namespace;
     private String name;
 
-    private String minOccurs;
-    private String maxOccurs;
+    private int minOccurs;
+    private int maxOccurs;
 
     private NameAndNamespace structureReference;
 
@@ -29,8 +29,20 @@ public class XmlElement implements StructurePart {
 
         this.name = element.getAttribute("name");
         this.namespace = elementNs;
-        this.minOccurs = element.getAttribute("minOccurs");
-        this.maxOccurs = element.getAttribute("maxOccurs");
+
+        String minAttr = element.getAttribute("minOccurs");
+
+        if (StringUtils.isBlank(minAttr)) {
+            this.minOccurs = 1;
+        }
+
+        String maxAttr = element.getAttribute("maxOccurs");
+
+        if (StringUtils.isBlank(maxAttr)) {
+            this.maxOccurs = 1;
+        } else if (maxAttr.equals("unbounded")) {
+            this.maxOccurs = 999999999;
+        }
 
         this.structureReference = structureReference;
     }
@@ -67,7 +79,11 @@ public class XmlElement implements StructurePart {
         return namespace + "/" + name;
     }
 
-    public Element render(Document doc, SchemaParsingContext context, NavNode parentNode, Properties properties, boolean rootElement) {
+    public Element render(Document doc,
+                          SchemaParsingContext context,
+                          NavNode parentNode,
+                          Properties properties,
+                          boolean rootElement) {
 
         NavNode currentPath = new NavNode(parentNode, structureReference, name);
 
@@ -242,20 +258,12 @@ public class XmlElement implements StructurePart {
         }
     }
 
-    public String getMinOccurs() {
+    public int getMinOccurs() {
         return minOccurs;
     }
 
-    public void setMinOccurs(String minOccurs) {
-        this.minOccurs = minOccurs;
-    }
-
-    public String getMaxOccurs() {
+    public int getMaxOccurs() {
         return maxOccurs;
-    }
-
-    public void setMaxOccurs(String maxOccurs) {
-        this.maxOccurs = maxOccurs;
     }
 
     private SortedSet<NamedStructure> findConcreteImplementationCandidates(SchemaParsingContext context,
