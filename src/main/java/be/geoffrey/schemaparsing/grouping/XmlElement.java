@@ -127,7 +127,7 @@ public class XmlElement implements StructurePart {
     }
 
     private Element createElement(Document doc, boolean rootElement) {
-        if (rootElement) {
+        if (rootElement && StringUtils.isNotBlank(namespace)) {
             return doc.createElementNS(namespace, "tmp:" + name);
         } else {
             return doc.createElement(name);
