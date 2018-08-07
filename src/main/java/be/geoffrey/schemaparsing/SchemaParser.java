@@ -311,8 +311,6 @@ public final class SchemaParser {
 
     private static Element findXmlElementThatCanContainElementDefinitions(Element complexType, Map<String, String> knownNamespaces) {
 
-        // TODO: At some point maybe I should just search down to find the first occurrence (might not always work)
-
         return selectFirstOccurrenceOfAny(complexType, Lists.newArrayList(
                 "sequence",
                 "complexContent.extension.sequence",

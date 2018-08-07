@@ -7,6 +7,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class XmlElement implements StructurePart {
 
@@ -110,7 +111,11 @@ public class XmlElement implements StructurePart {
 
             int choiceIndex = getChoiceForDecision(currentPath, properties);
             NamedStructure concreteImplementationChoice = concreteAsList.get(choiceIndex);
-            printChoiceMenu(currentPath, choiceIndex, concreteAsList);
+
+            printChoiceMenu(currentPath, choiceIndex, concreteAsList.stream()
+                    .map(NamedStructure::getName)
+                    .collect(Collectors.toList()));
+
             Element element = buildElementFromStructure(doc, context, concreteImplementationChoice, currentPath, properties, false);
 
             element.setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
@@ -122,7 +127,7 @@ public class XmlElement implements StructurePart {
     }
 
     private Element createElement(Document doc, boolean rootElement) {
-        if(rootElement) {
+        if (rootElement) {
             return doc.createElementNS(namespace, "tmp:" + name);
         } else {
             return doc.createElement(name);
@@ -139,18 +144,20 @@ public class XmlElement implements StructurePart {
         return 0;
     }
 
-    private void printChoiceMenu(NavNode currentPath, int selectedIndex, List<NamedStructure> options) {
+    private void printChoiceMenu(NavNode currentPath, int selectedIndex, List<String> options) {
+
+        System.out.println("[CHOICE] " + currentPath);
+
         String choiceMenu = "\tAll choices are: \n";
         for (int i = 0; i < options.size(); i++) {
-            NamedStructure possibility = options.get(i);
-            choiceMenu += "\t\t [" + i + "] " + possibility.getName();
+            String possibility = options.get(i);
+            choiceMenu += "\t\t [" + i + "] " + possibility;
             if (selectedIndex == i) {
                 choiceMenu += " <-- Selected";
             }
             choiceMenu += "\n";
         }
 
-        System.out.println("[CHOICE] " + currentPath);
         System.out.println(choiceMenu);
     }
 
@@ -174,13 +181,26 @@ public class XmlElement implements StructurePart {
             } else if (Choice.class.isAssignableFrom(structurePart.getClass())) {
 
                 // TODO: Check inheritance here.. I think that when 1st item of a choice is abstract for example, implementations are not searched...
-                // Pick the first one... // TODO: Add selecting behavior here
                 List<StructurePart> partsAvailableToChooseFrom = structurePart.getUnderlyingElements();
-                StructurePart firstPart = partsAvailableToChooseFrom.get(0);
-                appendElementsForEveryPartInStructure(me, Lists.newArrayList(firstPart), doc, context, thisNode, properties);
 
-                // TODO: Find a way to visualize this (a choice can contain 2 elements and a sequence for example), working with an index would be cool
-                System.out.println("[CHOICE] Made a choice for " + thisNode);
+                int choice = getChoiceForDecision(thisNode, properties);
+                StructurePart selectedPartOfChoice = partsAvailableToChooseFrom.get(choice);
+
+                printChoiceMenu(thisNode, choice, partsAvailableToChooseFrom
+                        .stream()
+                        .map(part -> {
+                            if (XmlElement.class.isAssignableFrom(part.getClass())) {
+                                return "An element named '" + ((XmlElement) part).getName() + "'";
+                            } else if(Choice.class.isAssignableFrom(part.getClass())) {
+                                return "a 'choice' element";
+                            } else if(Sequence.class.isAssignableFrom(part.getClass())) {
+                                return "a 'sequence' element";
+                            }
+                            return "Unknown choice";
+                        })
+                        .collect(Collectors.toList()));
+
+                appendElementsForEveryPartInStructure(me, Lists.newArrayList(selectedPartOfChoice), doc, context, thisNode, properties);
             }
         }
     }
