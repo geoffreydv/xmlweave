@@ -34,14 +34,13 @@ public class GenerateExampleXml {
 
         // ---------- Milestone 1: Generate a completely valid XML for a given XSD element
         // TODO: Add minOccurs / maxOccurs support but just with 1 level, to enable mandatory / not mandatory
-        // TODO: Add choice hook for # occurs
+        // TODO: Add choice hook for specific # occurs
+
         // TODO: Add support for "default mode" -> As much as possible / As less as possible
         // TODO: Add idea of lists etc to path traversal
         // TODO: Add minOccurs / maxOccurs support, multi elements / path rendering with [0] etc
         // TODO: Add types for attributes, now everything is a string
-        // TODO: Choices about minOccurs / maxOccurs etc :)
-        // TODO: Allow adding defaults for type "Always choose x" when deciding
-        // TODO: Make "reference" classes instead of NameAndNamespace (not clear)
+        // TODO: Add choice hook for path selection list[0].bla = BLA
         // TODO: Allow using "ref"
         // TODO: XS:ANY support
         // TODO: Add 'Default mode', right now it's 'fill as much as possible'
@@ -53,6 +52,7 @@ public class GenerateExampleXml {
         // TODO: Use "Optional<T>" like a baws
         // TODO: Validations etc, same class defined twice bvb
         //     - TODO: 2x hetzelfde geïmporteerd maar onder andere NS of whatever
+        // TODO: Add config to determine amount of times to recurse
         // TODO: MaxLength checks etc :)
         // TODO: Do an ultimate test where every file is validated against appropriate XSD with XMLStarlet
         // TODO: Look into auto regex generation

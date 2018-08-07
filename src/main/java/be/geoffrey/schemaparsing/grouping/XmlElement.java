@@ -9,10 +9,15 @@ import org.w3c.dom.Element;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static be.geoffrey.schemaparsing.AmountOfElementsStrategy.MAX;
+import static be.geoffrey.schemaparsing.AmountOfElementsStrategy.MIN;
+
 public class XmlElement implements StructurePart {
 
     private String namespace;
     private String name;
+
+    private static final int AS_MUCH_AS_POSSIBLE = 999;
 
     private int minOccurs;
     private int maxOccurs;
@@ -43,7 +48,7 @@ public class XmlElement implements StructurePart {
         if (StringUtils.isBlank(maxAttr)) {
             this.maxOccurs = 1;
         } else if (maxAttr.equals("unbounded")) {
-            this.maxOccurs = 999999999;
+            this.maxOccurs = AS_MUCH_AS_POSSIBLE;
         } else {
             this.maxOccurs = Integer.parseInt(maxAttr);
         }
@@ -98,12 +103,19 @@ public class XmlElement implements StructurePart {
             return null;
         }
 
+        int amountOfElementsToRender = decideAmountElementsToRender(currentPath, properties);
+
         if (BasicTypeUtil.isReferenceToBasicType(structureReference)) {
 
-            Element simpleElement = createElement(doc, rootElement);
-            simpleElement.appendChild(BasicTypeUtil.generateContentsOfABasicType(structureReference, doc, properties));
+            List<Element> results = new ArrayList<>();
 
-            return Lists.newArrayList(simpleElement);
+            for (int i = 0; i < amountOfElementsToRender; i++) {
+                Element simpleElement = createElement(doc, rootElement);
+                simpleElement.appendChild(BasicTypeUtil.generateContentsOfABasicType(structureReference, doc, properties));
+                results.add(simpleElement);
+            }
+
+            return results;
 
         } else {
 
@@ -115,10 +127,13 @@ public class XmlElement implements StructurePart {
 
             if (structure.isBasedOnBasicType()) {
 
-                Element simpleElement = createElement(doc, rootElement);
-                simpleElement.appendChild(BasicTypeUtil.generateContentsOfACustomBasicType(structure, doc, properties));
-
-                return Lists.newArrayList(simpleElement);
+                List<Element> elements = new ArrayList<>();
+                for (int i = 0; i < amountOfElementsToRender; i++) {
+                    Element simpleElement = createElement(doc, rootElement);
+                    simpleElement.appendChild(BasicTypeUtil.generateContentsOfACustomBasicType(structure, doc, properties));
+                    elements.add(simpleElement);
+                }
+                return elements;
             }
 
             SortedSet<NamedStructure> moreSpecificImplementations = findConcreteImplementationCandidates(context, structure);
@@ -128,7 +143,15 @@ public class XmlElement implements StructurePart {
                     throw new IllegalArgumentException("No implementations were found for abstract class " + structure.identity());
                 }
 
-                return buildElementFromStructure(doc, context, structure, currentPath, properties, rootElement);
+                List<Element> results = new ArrayList<>();
+
+                for (int i = 0; i < amountOfElementsToRender; i++) {
+                    Element lemlem = createElement(doc, rootElement);
+                    addAttributesAndChildElementsFromStructureToElement(lemlem, doc, context, structure, currentPath, properties);
+                    results.add(lemlem);
+                }
+
+                return results;
             }
 
             List<NamedStructure> concreteAsList = new ArrayList<>(moreSpecificImplementations);
@@ -142,14 +165,20 @@ public class XmlElement implements StructurePart {
 
             printChoiceMenu(currentPath, choiceIndex, concreteAsList.stream()
                     .map(NamedStructure::getName)
-                    .collect(Collectors.toList()));
+                    .collect(Collectors.toList()), "INHERITANCE");
 
-            List<Element> elements = buildElementFromStructure(doc, context, concreteImplementationChoice, currentPath, properties, false);
 
-            for (Element element : elements) {
-                element.setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
-                element.setAttribute("xmlns:spec", concreteImplementationChoice.getNamespace());
-                element.setAttribute("xsi:type", "spec:" + concreteImplementationChoice.getName());
+            List<Element> elements = new ArrayList<>();
+
+            for (int i = 0; i < amountOfElementsToRender; i++) {
+
+                Element lemlem = createElement(doc, rootElement);
+
+                addAttributesAndChildElementsFromStructureToElement(lemlem, doc, context, concreteImplementationChoice, currentPath, properties);
+
+                lemlem.setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+                lemlem.setAttribute("xmlns:spec", concreteImplementationChoice.getNamespace());
+                lemlem.setAttribute("xsi:type", "spec:" + concreteImplementationChoice.getName());
             }
 
             return elements;
@@ -174,9 +203,9 @@ public class XmlElement implements StructurePart {
         return 0;
     }
 
-    private void printChoiceMenu(NavNode currentPath, int selectedIndex, List<String> options) {
+    private void printChoiceMenu(NavNode currentPath, int selectedIndex, List<String> options, final String CHOICE_LABEL) {
 
-        System.out.println("[CHOICE] " + currentPath);
+        System.out.println("[CHOICE][" + CHOICE_LABEL + "] " + currentPath);
 
         String choiceMenu = "\tAll choices are: \n";
         for (int i = 0; i < options.size(); i++) {
@@ -188,7 +217,7 @@ public class XmlElement implements StructurePart {
             choiceMenu += "\n";
         }
 
-        System.out.println(choiceMenu);
+        System.out.print(choiceMenu);
     }
 
     private void appendElementsForEveryPartInStructure(Element me,
@@ -228,30 +257,25 @@ public class XmlElement implements StructurePart {
                             }
                             return "Unknown choice";
                         })
-                        .collect(Collectors.toList()));
+                        .collect(Collectors.toList()), "CHOICE_ELEMENT");
 
                 appendElementsForEveryPartInStructure(me, Lists.newArrayList(selectedPartOfChoice), doc, context, thisNode, properties);
             }
         }
     }
 
-    private List<Element> buildElementFromStructure(Document doc,
-                                                    SchemaParsingContext context,
-                                                    NamedStructure structureToUse,
-                                                    NavNode thisNode,
-                                                    Properties properties,
-                                                    boolean rootElement) {
-
-
-        Element me = createElement(doc, rootElement);
+    private void addAttributesAndChildElementsFromStructureToElement(Element element,
+                                                                     Document doc,
+                                                                     SchemaParsingContext context,
+                                                                     NamedStructure structureToUse,
+                                                                     NavNode thisNode,
+                                                                     Properties properties) {
 
         for (XmlAttribute xmlAttribute : structureToUse.getAttributes()) {
-            me.setAttribute(xmlAttribute.getName(), "RANDOM ATTRIBUTE VALUE"); // TODO: Verder uitwerken / type bepalen etc...
+            element.setAttribute(xmlAttribute.getName(), "RANDOM ATTRIBUTE VALUE"); // TODO: Verder uitwerken / type bepalen etc...
         }
 
-        appendElementsForEveryPartInStructure(me, structureToUse.getStructureParts(), doc, context, thisNode, properties);
-
-        return Lists.newArrayList(me);
+        appendElementsForEveryPartInStructure(element, structureToUse.getStructureParts(), doc, context, thisNode, properties);
     }
 
     private void renderChildElement(Document doc,
@@ -268,14 +292,6 @@ public class XmlElement implements StructurePart {
         }
     }
 
-    public int getMinOccurs() {
-        return minOccurs;
-    }
-
-    public int getMaxOccurs() {
-        return maxOccurs;
-    }
-
     private SortedSet<NamedStructure> findConcreteImplementationCandidates(SchemaParsingContext context,
                                                                            NamedStructure base) {
 
@@ -288,6 +304,42 @@ public class XmlElement implements StructurePart {
         }
 
         return allDiscovered;
+    }
+
+    private int decideAmountElementsToRender(NavNode currentPath, Properties properties) {
+
+        if (minOccurs == maxOccurs) {
+            return minOccurs;
+        }
+
+        AmountOfElementsStrategy strategy = decideStrategy(properties);
+
+        if (strategy.equals(MIN)) {
+            System.out.println("[CHOICE][#] " + currentPath + ". Decided to render " + minOccurs + " elements because the elementStrategy is set to MIN. Range (" + minOccurs + ", " + maxOccurs + ")");
+            return minOccurs;
+        } else {
+            return decideMaxAmountToRender(currentPath, properties);
+        }
+    }
+
+    private int decideMaxAmountToRender(NavNode currentPath, Properties properties) {
+        int maxInProperties = Integer.parseInt(properties.getProperty("generation.default.maxRepetitionsForRepeatableElements"));
+
+        if(maxInProperties < maxOccurs) {
+            System.out.println("[CHOICE][#] " + currentPath + ". Decided to render the max amount of elements, " + maxInProperties + " (capped by global config) because the elementStrategy is set to MAX. Range (" + minOccurs + ", " + maxOccurs + ")");
+            return maxInProperties;
+        }
+
+        System.out.println("[CHOICE][#] " + currentPath + ". Decided to render the max amount of elements, " + maxOccurs + " because the elementStrategy is set to MAX. Range (" + minOccurs + ", " + maxOccurs + ")");
+        return maxOccurs;
+    }
+
+    private AmountOfElementsStrategy decideStrategy(Properties properties) {
+        if (properties.containsKey("generation.default.minOccurs_strategy")) {
+            return AmountOfElementsStrategy.valueOf(properties.getProperty("generation.default.minOccurs_strategy"));
+        } else {
+            return MAX;
+        }
     }
 
     @Override
