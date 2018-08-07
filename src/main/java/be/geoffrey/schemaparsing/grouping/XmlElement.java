@@ -136,8 +136,8 @@ public class XmlElement implements StructurePart {
 
     private int getChoiceForDecision(NavNode currentPath, Properties properties) {
 
-        if (properties.containsKey("choices." + currentPath)) {
-            String index = properties.getProperty("choices." + currentPath);
+        if (properties.containsKey(currentPath + ".choice")) {
+            String index = properties.getProperty(currentPath + ".choice");
             return Integer.valueOf(index);
         }
 
