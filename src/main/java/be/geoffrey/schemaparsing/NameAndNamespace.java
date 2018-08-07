@@ -10,15 +10,6 @@ public class NameAndNamespace {
     private String name;
     private String namespace;
 
-    public static NameAndNamespace parse(String name, Map<String, String> knownNamespaces) {
-        if (name.contains(":")) {
-            String[] parts = name.split(":");
-            return new NameAndNamespace(parts[1], knownNamespaces.get(parts[0]));
-        } else {
-            return new NameAndNamespace(name, knownNamespaces.get(SCHEMA_NS));
-        }
-    }
-
     public NameAndNamespace(String name, String namespace) {
         this.name = name;
         this.namespace = namespace;

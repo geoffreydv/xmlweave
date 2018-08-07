@@ -34,6 +34,8 @@ public class XmlElement implements StructurePart {
 
         if (StringUtils.isBlank(minAttr)) {
             this.minOccurs = 1;
+        } else {
+            this.minOccurs = Integer.parseInt(minAttr);
         }
 
         String maxAttr = element.getAttribute("maxOccurs");
@@ -42,19 +44,11 @@ public class XmlElement implements StructurePart {
             this.maxOccurs = 1;
         } else if (maxAttr.equals("unbounded")) {
             this.maxOccurs = 999999999;
+        } else {
+            this.maxOccurs = Integer.parseInt(maxAttr);
         }
 
         this.structureReference = structureReference;
-    }
-
-    @Override
-    public StructurePart copy() {
-        return new XmlElement(this);
-    }
-
-    @Override
-    public List<StructurePart> getUnderlyingElements() {
-        return new ArrayList<>();
     }
 
     public XmlElement(XmlElement other) {
@@ -65,6 +59,16 @@ public class XmlElement implements StructurePart {
         this.maxOccurs = other.maxOccurs;
 
         this.structureReference = other.structureReference;
+    }
+
+    @Override
+    public StructurePart copy() {
+        return new XmlElement(this);
+    }
+
+    @Override
+    public List<StructurePart> getUnderlyingElements() {
+        return new ArrayList<>();
     }
 
     public String getNamespace() {
@@ -79,11 +83,11 @@ public class XmlElement implements StructurePart {
         return namespace + "/" + name;
     }
 
-    public Element render(Document doc,
-                          SchemaParsingContext context,
-                          NavNode parentNode,
-                          Properties properties,
-                          boolean rootElement) {
+    public List<Element> render(Document doc,
+                                SchemaParsingContext context,
+                                NavNode parentNode,
+                                Properties properties,
+                                boolean rootElement) {
 
         NavNode currentPath = new NavNode(parentNode, structureReference, name);
 
@@ -98,7 +102,8 @@ public class XmlElement implements StructurePart {
 
             Element simpleElement = createElement(doc, rootElement);
             simpleElement.appendChild(BasicTypeUtil.generateContentsOfABasicType(structureReference, doc, properties));
-            return simpleElement;
+
+            return Lists.newArrayList(simpleElement);
 
         } else {
 
@@ -109,9 +114,11 @@ public class XmlElement implements StructurePart {
             }
 
             if (structure.isBasedOnBasicType()) {
+
                 Element simpleElement = createElement(doc, rootElement);
                 simpleElement.appendChild(BasicTypeUtil.generateContentsOfACustomBasicType(structure, doc, properties));
-                return simpleElement;
+
+                return Lists.newArrayList(simpleElement);
             }
 
             SortedSet<NamedStructure> moreSpecificImplementations = findConcreteImplementationCandidates(context, structure);
@@ -137,13 +144,15 @@ public class XmlElement implements StructurePart {
                     .map(NamedStructure::getName)
                     .collect(Collectors.toList()));
 
-            Element element = buildElementFromStructure(doc, context, concreteImplementationChoice, currentPath, properties, false);
+            List<Element> elements = buildElementFromStructure(doc, context, concreteImplementationChoice, currentPath, properties, false);
 
-            element.setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
-            element.setAttribute("xmlns:spec", concreteImplementationChoice.getNamespace());
-            element.setAttribute("xsi:type", "spec:" + concreteImplementationChoice.getName());
+            for (Element element : elements) {
+                element.setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+                element.setAttribute("xmlns:spec", concreteImplementationChoice.getNamespace());
+                element.setAttribute("xsi:type", "spec:" + concreteImplementationChoice.getName());
+            }
 
-            return element;
+            return elements;
         }
     }
 
@@ -226,12 +235,12 @@ public class XmlElement implements StructurePart {
         }
     }
 
-    private Element buildElementFromStructure(Document doc,
-                                              SchemaParsingContext context,
-                                              NamedStructure structureToUse,
-                                              NavNode thisNode,
-                                              Properties properties,
-                                              boolean rootElement) {
+    private List<Element> buildElementFromStructure(Document doc,
+                                                    SchemaParsingContext context,
+                                                    NamedStructure structureToUse,
+                                                    NavNode thisNode,
+                                                    Properties properties,
+                                                    boolean rootElement) {
 
 
         Element me = createElement(doc, rootElement);
@@ -242,7 +251,7 @@ public class XmlElement implements StructurePart {
 
         appendElementsForEveryPartInStructure(me, structureToUse.getStructureParts(), doc, context, thisNode, properties);
 
-        return me;
+        return Lists.newArrayList(me);
     }
 
     private void renderChildElement(Document doc,
@@ -252,8 +261,9 @@ public class XmlElement implements StructurePart {
                                     XmlElement xmlElement,
                                     Properties properties) {
 
-        Element element = xmlElement.render(doc, context, thisNode, properties, false);
-        if (element != null) {
+        List<Element> elements = xmlElement.render(doc, context, thisNode, properties, false);
+
+        for (Element element : elements) {
             me.appendChild(element);
         }
     }

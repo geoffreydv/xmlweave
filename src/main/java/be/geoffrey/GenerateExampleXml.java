@@ -25,6 +25,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Properties;
 
 public class GenerateExampleXml {
@@ -104,9 +105,11 @@ public class GenerateExampleXml {
         Document doc = docBuilder.newDocument();
 
         // root elements
-        Element rootElement = element.render(doc, context, null, decisionProperties, true);
+        List<Element> rootElements = element.render(doc, context, null, decisionProperties, true);
 
-        doc.appendChild(rootElement);
+        for (Element rootElement : rootElements) {
+            doc.appendChild(rootElement);
+        }
 
         // write the content into xml file
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
