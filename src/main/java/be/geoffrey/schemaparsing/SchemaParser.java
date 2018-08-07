@@ -21,7 +21,6 @@ import static be.geoffrey.schemaparsing.NameAndNamespace.SCHEMA_NS;
 
 public final class SchemaParser {
 
-
     private SchemaParsingContext context;
 
     public SchemaParser() {

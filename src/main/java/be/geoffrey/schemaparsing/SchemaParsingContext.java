@@ -10,7 +10,6 @@ public class SchemaParsingContext {
 
     private String fileName;
 
-    private Properties properties = new Properties();
     private Map<String, NamedStructure> knownNamedStructures = new TreeMap<>();
     private Map<String, XmlElement> knownElements = new TreeMap<>();
     private Map<String, Set<String>> extensionsOfBaseClass = new HashMap<>();
@@ -33,7 +32,6 @@ public class SchemaParsingContext {
     }
 
     public void addInfoFromOtherSchema(SchemaParsingContext schemaParsingContext) {
-        this.properties.putAll(schemaParsingContext.properties);
         this.parsedFiles.addAll(schemaParsingContext.parsedFiles);
         this.classesThatRequireAddingBaseFields.addAll(schemaParsingContext.classesThatRequireAddingBaseFields);
         this.extensionsOfBaseClass.putAll(schemaParsingContext.extensionsOfBaseClass);

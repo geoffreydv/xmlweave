@@ -33,6 +33,7 @@ public class GenerateExampleXml {
     public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException, TransformerException {
 
         // ---------- Milestone 1: Generate a completely valid XML for a given XSD element
+        // TODO: Add caching metadata to speed up generation
         // TODO: Add choice hook for specific # occurs
         // TODO: Add support for "default mode" -> As much as possible / As less as possible
         // TODO: Add idea of lists etc to path traversal
@@ -42,7 +43,6 @@ public class GenerateExampleXml {
         // TODO: Allow using "ref"
         // TODO: XS:ANY support
         // TODO: Add 'Default mode', right now it's 'fill as much as possible'
-        // TODO: Add caching metadata to speed up generation
         // TODO: Allow imports without schemaLocation to define it manually
         // TODO: Come up with a good config file format
         // TODO: Afhandelen "default values" van types
