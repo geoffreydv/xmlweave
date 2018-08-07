@@ -44,7 +44,6 @@ public class GenerateExampleXml {
         // TODO: Allow using "ref"
         // TODO: XS:ANY support
         // TODO: Add 'Default mode', right now it's 'fill as much as possible'
-        // TODO: Same types get loaded multiple times I think (saw 2 breaks when parsing complexType 'GeneriekeOpdrachtType'
         // TODO: Add caching metadata to speed up generation
         // TODO: Allow imports without schemaLocation to define it manually
         // TODO: Come up with a good config file format
@@ -58,6 +57,7 @@ public class GenerateExampleXml {
         // TODO: Look into auto regex generation
         // TODO: FOR wsdl compares, be able to do a fake render, and return a list of every complexType that this element uses
         // TODO: Load documentation metadata / annotations etc from xsd
+        // TODO: Same types get loaded multiple times I think (saw 2 breaks when parsing complexType 'GeneriekeOpdrachtType'
         // ---------- Milestone einde: Throw every XSD against this thing to find issues
 
         String xsdPath = args[0];
