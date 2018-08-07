@@ -32,12 +32,12 @@ public class GenerateExampleXml {
     public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException, TransformerException {
 
         // ---------- Milestone 1: Generate a completely valid XML for a given XSD element
-        // TODO: Add configuration to enable switching for choice tags
         // TODO: Add minOccurs / maxOccurs support but just with 1 level, to enable mandatory / not mandatory
-        // TODO: Add minOccurs / maxOccurs support, multi elements / path rendering with [0] etc
+        // TODO: Add choice hook for # occurs
+        // TODO: Add support for "default mode" -> As much as possible / As less as possible
         // TODO: Add idea of lists etc to path traversal
+        // TODO: Add minOccurs / maxOccurs support, multi elements / path rendering with [0] etc
         // TODO: Add types for attributes, now everything is a string
-        // TODO: Add configuration to enable switching for minOccurs
         // TODO: Choices about minOccurs / maxOccurs etc :)
         // TODO: Allow adding defaults for type "Always choose x" when deciding
         // TODO: Make "reference" classes instead of NameAndNamespace (not clear)

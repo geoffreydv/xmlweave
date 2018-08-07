@@ -17,9 +17,10 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static be.geoffrey.schemaparsing.NameAndNamespace.SCHEMA_NS;
+
 public final class SchemaParser {
 
-    private static final String SCHEMA_NS = "SCHEMA_NS";
 
     private SchemaParsingContext context;
 
@@ -60,7 +61,7 @@ public final class SchemaParser {
                         break;
 
                     case "complexType": {
-                        NamedStructure thisType = parseRootComplexType(knownNamespaces, childAsElement, context);
+                        NamedStructure thisType = parseRootComplexType(childAsElement, knownNamespaces, context);
 
                         if (thisType.isExtensionOfOtherCustomType()) {
                             context.indicateElementRequiresInheritanceEnhancement(thisType);
@@ -128,8 +129,7 @@ public final class SchemaParser {
         return knownNamespaces;
     }
 
-    private static NamedStructure parseRootComplexType(Map<String, String> knownNamespaces,
-                                                       Element complexType,
+    private static NamedStructure parseRootComplexType(Element complexType, Map<String, String> knownNamespaces,
                                                        SchemaParsingContext context) {
 
         String ns = knownNamespaces.get(SCHEMA_NS);
@@ -154,14 +154,16 @@ public final class SchemaParser {
     }
 
 
-    private static XmlElement parseElementDefinition(Element element, Map<String, String> knownNamespaces,
+    private static XmlElement parseElementDefinition(Element element,
+                                                     Map<String, String> knownNamespaces,
                                                      SchemaParsingContext context) {
 
         String namespaceOfCurrentSchema = knownNamespaces.get(SCHEMA_NS);
         String nameOfThisElement = element.getAttribute("name");
 
         if (element.hasAttribute("type")) {
-            return new XmlElement(namespaceOfCurrentSchema, nameOfThisElement, parseReference(element.getAttribute("type"), knownNamespaces));
+            NameAndNamespace structureRef = parseReference(element.getAttribute("type"), knownNamespaces);
+            return new XmlElement(element, structureRef, namespaceOfCurrentSchema);
         }
 
         // This element can also define its own fields, without using a type reference.
@@ -187,7 +189,7 @@ public final class SchemaParser {
         context.addKnownNamedStructure(dynamicType);
 
         // Assign this custom named structure as the type of the element
-        return new XmlElement(namespaceOfCurrentSchema, nameOfThisElement, dynamicType.reference());
+        return new XmlElement(element, dynamicType.reference(), namespaceOfCurrentSchema);
     }
 
     private static void fillNamedStructureWithInformationFromXmlComplexType(NamedStructure namedStructure,
@@ -276,7 +278,8 @@ public final class SchemaParser {
 
                 switch (nn.getName()) {
                     case "element":
-                        parts.add(extractInfoFromXmlElement(knownNamespaces, context, (Element) cn));
+
+                        parts.add(parseElementDefinition((Element) cn, knownNamespaces, context));
                         break;
                     case "sequence":
                         List<StructurePart> childrenOfSequence = parseStructurePartsInWrapper((Element) cn, knownNamespaces, context);
@@ -292,22 +295,6 @@ public final class SchemaParser {
 
         return parts;
     }
-
-    private static XmlElement extractInfoFromXmlElement(Map<String, String> knownNamespaces, SchemaParsingContext context, Element element) {
-        String typeOfElement = element.getAttribute("type");
-
-        if (StringUtils.isNotBlank(typeOfElement)) {
-            // This is easy, the element has a type reference
-            String name = element.getAttribute("name");
-            XmlElement xmlElement = new XmlElement(knownNamespaces.get(SCHEMA_NS), name, parseReference(typeOfElement, knownNamespaces));
-            xmlElement.setMinOccurs(element.getAttribute("minOccurs"));
-            xmlElement.setMaxOccurs(element.getAttribute("maxOccurs"));
-            return xmlElement;
-        }
-
-        return parseElementDefinition(element, knownNamespaces, context);
-    }
-
 
     private static Element findXmlElementThatCanContainElementDefinitions(Element complexType, Map<String, String> knownNamespaces) {
 

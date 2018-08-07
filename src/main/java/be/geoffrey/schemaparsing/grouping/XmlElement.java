@@ -19,14 +19,19 @@ public class XmlElement implements StructurePart {
 
     private NameAndNamespace structureReference;
 
-    public XmlElement(String namespace, String name, NameAndNamespace structureReference) {
+    public XmlElement(Element element,
+                      NameAndNamespace structureReference,
+                      String elementNs) {
 
-        if (StringUtils.isBlank(name) || StringUtils.isBlank(name) || structureReference == null) {
+        if (structureReference == null) {
             throw new IllegalArgumentException("Could not create an element");
         }
 
-        this.name = name;
-        this.namespace = namespace;
+        this.name = element.getAttribute("name");
+        this.namespace = elementNs;
+        this.minOccurs = element.getAttribute("minOccurs");
+        this.maxOccurs = element.getAttribute("maxOccurs");
+
         this.structureReference = structureReference;
     }
 
@@ -191,9 +196,9 @@ public class XmlElement implements StructurePart {
                         .map(part -> {
                             if (XmlElement.class.isAssignableFrom(part.getClass())) {
                                 return "An element named '" + ((XmlElement) part).getName() + "'";
-                            } else if(Choice.class.isAssignableFrom(part.getClass())) {
+                            } else if (Choice.class.isAssignableFrom(part.getClass())) {
                                 return "a 'choice' element";
-                            } else if(Sequence.class.isAssignableFrom(part.getClass())) {
+                            } else if (Sequence.class.isAssignableFrom(part.getClass())) {
                                 return "a 'sequence' element";
                             }
                             return "Unknown choice";
