@@ -179,6 +179,8 @@ public class XmlElement implements StructurePart {
                 lemlem.setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
                 lemlem.setAttribute("xmlns:spec", concreteImplementationChoice.getNamespace());
                 lemlem.setAttribute("xsi:type", "spec:" + concreteImplementationChoice.getName());
+
+                elements.add(lemlem);
             }
 
             return elements;
