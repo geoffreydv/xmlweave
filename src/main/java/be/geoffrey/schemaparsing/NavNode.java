@@ -1,7 +1,6 @@
 package be.geoffrey.schemaparsing;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public class NavNode {
 
@@ -46,20 +45,28 @@ public class NavNode {
         return representation + "/" + typeReference.getName();
     }
 
-    public boolean willStartRecursing() {
-        Set<NameAndNamespace> encounteredTypes = new HashSet<>();
+    public boolean willStartRecursing(int maxDepth) {
+
+        Map<NameAndNamespace, Integer> encounteredCounters = new HashMap<>();
 
         NavNode cursor = this;
-        encounteredTypes.add(typeReference);
+
+        encounteredCounters.putIfAbsent(cursor.typeReference, 0);
+
+        Integer originalCount = encounteredCounters.get(cursor.typeReference);
+        encounteredCounters.put(cursor.typeReference, originalCount + 1);
 
         while (cursor.parent != null) {
             cursor = cursor.parent;
 
-            if (encounteredTypes.contains(cursor.typeReference)) {
+            encounteredCounters.putIfAbsent(cursor.typeReference, 0);
+
+            if (encounteredCounters.get(cursor.typeReference) > (maxDepth - 1)) {
                 return true;
             }
 
-            encounteredTypes.add(cursor.typeReference);
+            originalCount = encounteredCounters.get(cursor.typeReference);
+            encounteredCounters.put(cursor.typeReference, originalCount + 1);
         }
 
         return false;

@@ -96,10 +96,11 @@ public class XmlElement implements StructurePart {
 
         NavNode currentPath = new NavNode(parentNode, structureReference, name);
 
-        boolean recursing = currentPath.willStartRecursing();
+        Integer maxRecursionDepth = Integer.valueOf(properties.getProperty("generation.default.maxRecursionDepth"));
+        boolean recursing = currentPath.willStartRecursing(maxRecursionDepth);
 
         if (recursing) {
-            System.out.println("WARNING: Recursion detected: " + currentPath + ", breaking after one repetition");
+            System.out.println("WARNING: Recursion detected: " + currentPath + ", breaking after " + maxRecursionDepth + " repetitions");
             return new ArrayList<>();
         }
 
@@ -327,7 +328,7 @@ public class XmlElement implements StructurePart {
     private int decideMaxAmountToRender(NavNode currentPath, Properties properties) {
         int maxInProperties = Integer.parseInt(properties.getProperty("generation.default.maxRepetitionsForRepeatableElements"));
 
-        if(maxInProperties < maxOccurs) {
+        if (maxInProperties < maxOccurs) {
             System.out.println("[CHOICE][#] " + currentPath + ". Decided to render the max amount of elements, " + maxInProperties + " (capped by global config) because the elementStrategy is set to MAX. Range (" + minOccurs + ", " + maxOccurs + ")");
             return maxInProperties;
         }
