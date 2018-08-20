@@ -100,7 +100,7 @@ public class XmlElement implements StructurePart {
 
         if (recursing) {
             System.out.println("WARNING: Recursion detected: " + currentPath + ", breaking after one repetition");
-            return null;
+            return new ArrayList<>();
         }
 
         int amountOfElementsToRender = decideAmountElementsToRender(currentPath, properties);
