@@ -206,7 +206,10 @@ public final class SchemaParser {
         Element elementDefinitionWrapper = findXmlElementThatCanContainElementDefinitions(complexType, knownNamespaces);
 
         if (elementDefinitionWrapper != null) {
-            List<StructurePart> collectedStructureParts = parseStructurePartsInWrapper(elementDefinitionWrapper, knownNamespaces, context);
+
+            Element parent = (Element) elementDefinitionWrapper.getParentNode();
+
+            List<StructurePart> collectedStructureParts = parseStructurePartsInWrapper(parent, knownNamespaces, context);
             namedStructure.addStructurePartsAtBeginning(collectedStructureParts);
         }
 
