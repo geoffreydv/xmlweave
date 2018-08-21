@@ -32,9 +32,9 @@ public class GenerateExampleXml {
 
     public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException, TransformerException {
 
+        // TODO: Add choice hook for specific # occurs of one element
         // ---------- Milestone 1: Generate a completely valid XML for a given XSD element
         // TODO: Add caching metadata to speed up generation
-        // TODO: Add choice hook for specific # occurs
         // TODO: Add support for "default mode" -> As much as possible / As less as possible
         // TODO: Add idea of lists etc to path traversal
         // TODO: Add minOccurs / maxOccurs support, multi elements / path rendering with [0] etc
