@@ -14,21 +14,34 @@ import static be.geoffrey.schemaparsing.AmountOfElementsStrategy.MIN;
 
 public class XmlElement implements StructurePart {
 
+    private static final int AS_MUCH_AS_POSSIBLE = 999;
+
     private String namespace;
     private String name;
-
-    private static final int AS_MUCH_AS_POSSIBLE = 999;
 
     private int minOccurs;
     private int maxOccurs;
 
-    private NameAndNamespace structureReference;
+    private NameAndNamespace typeReference;
+
+    // OR
+
+    private NameAndNamespace ref;
+
+    private XmlElement() {
+    }
+
+    public static XmlElement refElement(NameAndNamespace ref) {
+        XmlElement elem = new XmlElement();
+        elem.ref = ref;
+        return elem;
+    }
 
     public XmlElement(Element element,
-                      NameAndNamespace structureReference,
+                      NameAndNamespace typeReference,
                       String elementNs) {
 
-        if (structureReference == null) {
+        if (typeReference == null) {
             throw new IllegalArgumentException("Could not create an element");
         }
 
@@ -53,17 +66,19 @@ public class XmlElement implements StructurePart {
             this.maxOccurs = Integer.parseInt(maxAttr);
         }
 
-        this.structureReference = structureReference;
+        this.typeReference = typeReference;
     }
 
-    public XmlElement(XmlElement other) {
+    private XmlElement(XmlElement other) {
         this.namespace = other.namespace;
         this.name = other.name;
 
         this.minOccurs = other.minOccurs;
         this.maxOccurs = other.maxOccurs;
 
-        this.structureReference = other.structureReference;
+        this.typeReference = other.typeReference;
+
+        this.ref = other.ref;
     }
 
     @Override
@@ -94,7 +109,15 @@ public class XmlElement implements StructurePart {
                                 Properties properties,
                                 boolean rootElement) {
 
-        NavNode currentPath = new NavNode(parentNode, structureReference, name);
+        if (ref != null) {
+            // Draw the reference instead of trying to render this empty element
+            XmlElement referencedElement = context.getKnownElement(ref);
+            return referencedElement.render(doc, context, parentNode, properties, rootElement);
+        }
+
+        NavNode currentPath = new NavNode(parentNode, typeReference, name);
+
+        System.out.println(currentPath);
 
         Integer maxRecursionDepth = Integer.valueOf(properties.getProperty("generation.default.maxRecursionDepth"));
         boolean recursing = currentPath.willStartRecursing(maxRecursionDepth);
@@ -106,13 +129,13 @@ public class XmlElement implements StructurePart {
 
         int amountOfElementsToRender = decideAmountElementsToRender(currentPath, properties);
 
-        if (BasicTypeUtil.isReferenceToBasicType(structureReference)) {
+        if (BasicTypeUtil.isReferenceToBasicType(typeReference)) {
 
             List<Element> results = new ArrayList<>();
 
             for (int i = 0; i < amountOfElementsToRender; i++) {
                 Element simpleElement = createElement(doc, rootElement);
-                simpleElement.appendChild(BasicTypeUtil.generateContentsOfABasicType(structureReference, doc, properties));
+                simpleElement.appendChild(BasicTypeUtil.generateContentsOfABasicType(typeReference, doc, properties));
                 results.add(simpleElement);
             }
 
@@ -120,10 +143,10 @@ public class XmlElement implements StructurePart {
 
         } else {
 
-            NamedStructure structure = context.lookupXmlStructure(structureReference);
+            NamedStructure structure = context.lookupXmlStructure(typeReference);
 
             if (structure == null) {
-                throw new IllegalArgumentException("Could not load the structure of this class from the XSD context: " + structureReference.identity());
+                throw new IllegalArgumentException("Could not load the structure of this class from the XSD context: " + typeReference.identity());
             }
 
             if (structure.isBasedOnBasicType()) {
@@ -350,7 +373,7 @@ public class XmlElement implements StructurePart {
         return "ElementType{" +
                 "name='" + name + '\'' +
                 ", minOccurs=" + minOccurs +
-                ", type=" + structureReference +
+                ", type=" + typeReference +
                 '}';
     }
 }

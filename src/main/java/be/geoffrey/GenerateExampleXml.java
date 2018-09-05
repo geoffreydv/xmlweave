@@ -35,14 +35,11 @@ public class GenerateExampleXml {
         // TODO: Add choice hook for specific # occurs of one element
         // ---------- Milestone 1: Generate a completely valid XML for a given XSD element
         // TODO: Add caching metadata to speed up generation
-        // TODO: Add support for "default mode" -> As much as possible / As less as possible
         // TODO: Add idea of lists etc to path traversal
         // TODO: Add minOccurs / maxOccurs support, multi elements / path rendering with [0] etc
         // TODO: Add types for attributes, now everything is a string
         // TODO: Add choice hook for path selection list[0].bla = BLA
-        // TODO: Allow using "ref"
         // TODO: XS:ANY support
-        // TODO: Add 'Default mode', right now it's 'fill as much as possible'
         // TODO: Allow imports without schemaLocation to define it manually
         // TODO: Come up with a good config file format
         // TODO: Afhandelen "default values" van types

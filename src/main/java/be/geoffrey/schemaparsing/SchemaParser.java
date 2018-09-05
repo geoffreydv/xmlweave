@@ -54,9 +54,8 @@ public final class SchemaParser {
 
                 switch (nns.getName()) {
                     case "element":
-
-                        XmlElement thisElement = parseElementDefinition(childAsElement, knownNamespaces, context);
-                        context.addKnownRootElement(thisElement);
+                        XmlElement elem = parseElementDefinition(childAsElement, knownNamespaces, context);
+                        context.addKnownRootElement(elem);
                         break;
 
                     case "complexType": {
@@ -112,7 +111,20 @@ public final class SchemaParser {
 
     private static Map<String, String> collectNamespacesDefinedInSchema(String schemaNamespaceOverride, Element schema) {
         Map<String, String> knownNamespaces = new HashMap<>();
-        knownNamespaces.put(SCHEMA_NS, schemaNamespaceOverride != null ? schemaNamespaceOverride : schema.getAttribute("xmlns"));
+
+        String defaultSchemaForUnqualifiedElements = "";
+
+        if (schemaNamespaceOverride != null) {
+            defaultSchemaForUnqualifiedElements = schemaNamespaceOverride;
+        } else if (schema.hasAttribute("elementFormDefault")
+                && schema.getAttribute("elementFormDefault").equals("qualified")
+                && schema.hasAttribute("targetNamespace")) {
+            defaultSchemaForUnqualifiedElements = schema.getAttribute("targetNamespace");
+        } else if (schema.hasAttribute("xmlns")) {
+            defaultSchemaForUnqualifiedElements = schema.getAttribute("xmlns");
+        }
+
+        knownNamespaces.put(SCHEMA_NS, defaultSchemaForUnqualifiedElements);
 
         NamedNodeMap schemaAttributes = schema.getAttributes();
         for (int i = 0; i < schemaAttributes.getLength(); i++) {
@@ -163,6 +175,8 @@ public final class SchemaParser {
         if (element.hasAttribute("type")) {
             NameAndNamespace structureRef = parseReference(element.getAttribute("type"), knownNamespaces);
             return new XmlElement(element, structureRef, namespaceOfCurrentSchema);
+        } else if (element.hasAttribute("ref")) {
+            return XmlElement.refElement(parseReference(element.getAttribute("ref"), knownNamespaces));
         }
 
         // This element can also define its own fields, without using a type reference.
@@ -280,7 +294,6 @@ public final class SchemaParser {
 
                 switch (nn.getName()) {
                     case "element":
-
                         parts.add(parseElementDefinition((Element) cn, knownNamespaces, context));
                         break;
                     case "sequence":

@@ -7,7 +7,7 @@ public class Sequence implements StructurePart {
 
     private List<StructurePart> parts;
 
-    public Sequence(Sequence sequence) {
+    private Sequence(Sequence sequence) {
         parts = sequence.parts.stream()
                 .map(StructurePart::copy)
                 .collect(Collectors.toList());
