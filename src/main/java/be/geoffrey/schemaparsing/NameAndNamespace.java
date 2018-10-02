@@ -1,6 +1,5 @@
 package be.geoffrey.schemaparsing;
 
-import java.util.Map;
 import java.util.Objects;
 
 public class NameAndNamespace {
@@ -19,7 +18,7 @@ public class NameAndNamespace {
         // TODO: Only use for testing, lame method
         int split = name.indexOf("_");
 
-        if(split == -1) {
+        if (split == -1) {
             return name;
         }
 

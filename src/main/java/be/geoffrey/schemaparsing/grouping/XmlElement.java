@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import static be.geoffrey.schemaparsing.AmountOfElementsStrategy.MAX;
 import static be.geoffrey.schemaparsing.AmountOfElementsStrategy.MIN;
+import static be.geoffrey.schemaparsing.BasicTypeUtil.BASIC_XSD_TYPES_NAMESPACE;
 
 public class XmlElement implements StructurePart {
 
@@ -117,7 +118,7 @@ public class XmlElement implements StructurePart {
 
         NavNode currentPath = new NavNode(parentNode, typeReference, name);
 
-        System.out.println(currentPath);
+//        System.out.println(currentPath);
 
         Integer maxRecursionDepth = Integer.valueOf(properties.getProperty("generation.default.maxRecursionDepth"));
         boolean recursing = currentPath.willStartRecursing(maxRecursionDepth);
@@ -200,7 +201,7 @@ public class XmlElement implements StructurePart {
 
                 addAttributesAndChildElementsFromStructureToElement(lemlem, doc, context, concreteImplementationChoice, currentPath, properties);
 
-                lemlem.setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+                lemlem.setAttribute("xmlns:xsi", BASIC_XSD_TYPES_NAMESPACE);
                 lemlem.setAttribute("xmlns:spec", concreteImplementationChoice.getNamespace());
                 lemlem.setAttribute("xsi:type", "spec:" + concreteImplementationChoice.getName());
 

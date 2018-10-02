@@ -10,6 +10,7 @@ import java.util.Properties;
 
 public final class BasicTypeUtil {
 
+    public static final String BASIC_XSD_TYPES_NAMESPACE = "http://www.w3.org/2001/XMLSchema";
     private static final List<String> BASIC_TYPES = Lists.newArrayList("string", "int", "boolean", "double", "decimal", "integer", "dateTime", "date");
 
     private BasicTypeUtil() {
@@ -70,6 +71,7 @@ public final class BasicTypeUtil {
 
     public static boolean isReferenceToBasicType(NameAndNamespace type) {
         // TODO: Move this to reference maybe?
-        return BASIC_TYPES.contains(type.getName());
+        return BASIC_XSD_TYPES_NAMESPACE.equals(type.getNamespace())
+                && BASIC_TYPES.contains(type.getName());
     }
 }
