@@ -1,4 +1,4 @@
-package be.geoffrey.schemaparsing;
+package be.geoffrey.xmlweave.core.usecase;
 
 import java.io.File;
 
