@@ -1,6 +1,5 @@
 *.idea
 target
-
-comparewsdl.iml
+*.iml
 
 rezultz.xml

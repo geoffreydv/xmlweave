@@ -10,9 +10,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 public class MainController {
 
     @GetMapping
-    @ResponseBody
     public String showMain() {
-        return "HELLO WORLD";
+        return "index";
     }
 
 }
