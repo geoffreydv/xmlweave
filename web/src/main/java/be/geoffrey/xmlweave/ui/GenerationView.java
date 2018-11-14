@@ -3,6 +3,7 @@ package be.geoffrey.xmlweave.ui;
 import be.geoffrey.xmlweave.core.usecase.XmlWeaveService;
 import be.geoffrey.xmlweave.core.usecase.ElementRepresentation;
 import be.geoffrey.xmlweave.core.usecase.choice.ElementChoice;
+import be.geoffrey.xmlweave.service.XmlRenderer;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -18,9 +19,13 @@ import java.util.UUID;
 public class GenerationView extends VerticalLayout {
 
     private final XmlWeaveService xmlWeaveService;
+    private final XmlRenderer xmlRenderer;
 
-    public GenerationView(XmlWeaveService xmlWeaveService) {
+    public GenerationView(XmlWeaveService xmlWeaveService,
+                          XmlRenderer xmlRenderer) {
+
         this.xmlWeaveService = xmlWeaveService;
+        this.xmlRenderer = xmlRenderer;
 
         buildUI();
     }
@@ -43,7 +48,7 @@ public class GenerationView extends VerticalLayout {
             Optional<ElementRepresentation> representation = xmlWeaveService.getRepresentation(new File(fileField.getValue()), rootElementBox.getValue());
 
             if (representation.isPresent()) {
-                generatedCode.setValue(UUID.randomUUID().toString());
+                generatedCode.setValue(xmlRenderer.renderAsXml(representation.get()));
             } else {
                 generatedCode.setValue("Nothing useful can be rendered.");
             }
