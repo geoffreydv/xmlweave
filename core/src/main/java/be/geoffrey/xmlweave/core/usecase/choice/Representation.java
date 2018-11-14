@@ -1,5 +1,7 @@
 package be.geoffrey.xmlweave.core.usecase.choice;
 
+import be.geoffrey.xmlweave.core.usecase.ElementRepresentation;
+
 import java.util.List;
 import java.util.Map;
 

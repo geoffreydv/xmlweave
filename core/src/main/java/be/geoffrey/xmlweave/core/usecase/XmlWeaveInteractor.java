@@ -1,21 +1,18 @@
 package be.geoffrey.xmlweave.core.usecase;
 
-import be.geoffrey.xmlweave.core.usecase.choice.*;
-import com.geoffrey.xmlweave.xmlschema.Element;
+import be.geoffrey.xmlweave.core.usecase.choice.Choice;
 import com.geoffrey.xmlweave.xmlschema.Schema;
 import com.geoffrey.xmlweave.xmlschema.TopLevelElement;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import javax.xml.bind.JAXB;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-public class XmlWeaveInteractor implements XmlWeaveService {
+class XmlWeaveInteractor implements XmlWeaveService {
 
     public XmlWeaveInteractor() {
     }
@@ -88,37 +85,59 @@ public class XmlWeaveInteractor implements XmlWeaveService {
 //    }
 
     @Override
-    public Representation getRepresentation(File xsdFile, Map<String, List<Choice>> choices) {
+    public Optional<ElementRepresentation> getRepresentation(File xsdFile, String rootElement) {
 
-        Map<String, List<Choice>> newChoices = copyChoices(choices);
-
-        Schema schema = JAXB.unmarshal(xsdFile, Schema.class);
-
-        if (newChoices.get("/").isEmpty()) {
-
-            List<TopLevelElement> topLevelElements = findAllTopLevelElements(schema);
-
-            newChoices.get("/").add(new ListChoice(
-                    topLevelElements.stream()
-                            .map(Element::getName)
-                            .collect(Collectors.toList())));
-
-            return new Representation(null, newChoices);
+        if (!StringUtils.hasText(rootElement)) {
+            return Optional.empty();
         }
 
-        ElementChoice elementChoice = newChoices.get("/").stream()
-                .filter(ns -> ns instanceof ElementChoice)
-                .map(ns -> (ElementChoice) ns)
-                .findFirst().get();
+        if (StringUtils.hasText(rootElement)) {
 
-        TopLevelElement tle = findAllTopLevelElements(schema).stream()
-                .filter(te -> te.getName().equals(elementChoice.getElement()))
-                .findFirst()
-                .get();
+            Schema schema = JAXB.unmarshal(xsdFile, Schema.class);
 
-        ElementRepresentation rootElem = new ElementRepresentation("/", tle.getName());
+            Optional<TopLevelElement> matchingElement = findAllTopLevelElements(schema)
+                    .stream()
+                    .filter(elem -> elem.getName().equals(rootElement))
+                    .findFirst();
 
-        return new Representation(rootElem, newChoices);
+            if (!matchingElement.isPresent()) {
+                return Optional.empty();
+            }
+
+            return Optional.of(new ElementRepresentation(matchingElement.get().getName()));
+        }
+
+//
+////        Map<String, List<Choice>> newChoices = copyChoices(choices);
+//
+
+//
+//        if (newChoices.get("/").isEmpty()) {
+//
+//            List<TopLevelElement> topLevelElements = findAllTopLevelElements(schema);
+//
+//            newChoices.get("/").add(new ListChoice(
+//                    topLevelElements.stream()
+//                            .map(ElementRepresentation::getName)
+//                            .collect(Collectors.toList())));
+//
+//            return new Representation(null, newChoices);
+//        }
+//
+//        ElementChoice elementChoice = newChoices.get("/").stream()
+//                .filter(ns -> ns instanceof ElementChoice)
+//                .map(ns -> (ElementChoice) ns)
+//                .findFirst().get();
+//
+//        TopLevelElement tle = findAllTopLevelElements(schema).stream()
+//                .filter(te -> te.getName().equals(elementChoice.getElement()))
+//                .findFirst()
+//                .get();
+//
+//        ElementRepresentation rootElem = new ElementRepresentation("/", tle.getName());
+//
+//        return new Representation(rootElem, newChoices);
+        return Optional.empty();
     }
 
     private Map<String, List<Choice>> copyChoices(Map<String, List<Choice>> choices) {
