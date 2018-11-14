@@ -24,8 +24,12 @@ public class StaticAnalysisTest {
 
             @Override
             public void defineRules() {
-                base().mustNotUse(base().allSubOf());
-                service.mayUse(coreUsecase);
+
+                base().mustNotUse(base().allSubOf()); // Nothing in the base package
+
+                service.mayUse(coreUsecase)
+                        .mayUse(service);
+
                 ui.mayUse(coreUsecase);
             }
         }
