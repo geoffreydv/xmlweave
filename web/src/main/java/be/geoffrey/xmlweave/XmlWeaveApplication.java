@@ -2,9 +2,10 @@ package be.geoffrey.xmlweave;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 
 @SpringBootApplication
-public class XmlWeaveApplication {
+public class XmlWeaveApplication extends SpringBootServletInitializer {
     public static void main(String[] args) {
         SpringApplication.run(XmlWeaveApplication.class);
     }
