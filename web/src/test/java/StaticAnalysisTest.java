@@ -37,7 +37,9 @@ public class StaticAnalysisTest {
                 .withRelativeRules(new BeGeoffreyXmlweave())
                 .withExternals("java.*",
                         "com.vaadin.*",
-                        "org.springframework.*");
+                        "org.springframework.*",
+                        "kotlin.*",
+                        "org.jetbrains.*");
 
         DependencyResult result = new DependencyAnalyzer(config)
                 .rules(rules)
