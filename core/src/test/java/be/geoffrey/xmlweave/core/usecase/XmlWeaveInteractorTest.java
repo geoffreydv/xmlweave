@@ -16,7 +16,7 @@ public class XmlWeaveInteractorTest {
         File testFile = TestFileReader.readTestFile("2_simple_elements.xsd");
 
         XmlWeaveInteractor sut = new XmlWeaveInteractor();
-        Optional<Element> representation = sut.getRepresentation(testFile, "");
+        Optional<Element> representation = sut.getElementStructure(testFile, "");
         assertThat(representation).isNotPresent();
     }
 
@@ -26,7 +26,7 @@ public class XmlWeaveInteractorTest {
         File testFile = TestFileReader.readTestFile("2_simple_elements.xsd");
 
         XmlWeaveInteractor sut = new XmlWeaveInteractor();
-        Optional<Element> representation = sut.getRepresentation(testFile, "SimpleBasicElement");
+        Optional<Element> representation = sut.getElementStructure(testFile, "SimpleBasicElement");
 
         assertThat(representation).isPresent();
         assertThat(representation.get().getName()).isEqualTo("SimpleBasicElement");
@@ -38,7 +38,7 @@ public class XmlWeaveInteractorTest {
         File testFile = TestFileReader.readTestFile("2_simple_elements.xsd");
 
         XmlWeaveInteractor sut = new XmlWeaveInteractor();
-        Optional<Element> representation = sut.getRepresentation(testFile, "Bla");
+        Optional<Element> representation = sut.getElementStructure(testFile, "Bla");
 
         assertThat(representation).isNotPresent();
     }
@@ -49,7 +49,7 @@ public class XmlWeaveInteractorTest {
         File testFile = TestFileReader.readTestFile("1_simple_element_with_basic_childs.xsd");
 
         XmlWeaveInteractor sut = new XmlWeaveInteractor();
-        Optional<Element> rep = sut.getRepresentation(testFile, "SimpleBasicElement");
+        Optional<Element> rep = sut.getElementStructure(testFile, "SimpleBasicElement");
 
         Element element = rep.get();
 

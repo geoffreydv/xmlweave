@@ -1,7 +1,7 @@
 package be.geoffrey.xmlweave.ui
 
 import be.geoffrey.xmlweave.core.usecase.XmlWeaveService
-import be.geoffrey.xmlweave.service.XmlRenderer
+import be.geoffrey.xmlweave.core.usecase.xmlrendering.XmlRenderer
 import com.vaadin.flow.component.button.Button
 import com.vaadin.flow.component.html.H1
 import com.vaadin.flow.component.orderedlayout.VerticalLayout
@@ -34,7 +34,7 @@ class GenerationView(private val xmlWeaveService: XmlWeaveService,
 
         val button = Button("Generate XML")
         button.addClickListener { e ->
-            val representation = xmlWeaveService.getRepresentation(File(fileField.value), rootElementBox.value)
+            val representation = xmlWeaveService.getElementStructure(File(fileField.value), rootElementBox.value)
 
             if (representation.isPresent) {
                 generatedCode.value = xmlRenderer.renderAsXml(representation.get())

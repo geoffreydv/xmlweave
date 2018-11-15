@@ -1,5 +1,6 @@
 package be.geoffrey.xmlweave.core.usecase
 
+import be.geoffrey.xmlweave.core.usecase.xmlrendering.XmlRenderer
 import com.geoffrey.xmlweave.xmlschema.LocalElement
 import com.geoffrey.xmlweave.xmlschema.Schema
 import com.geoffrey.xmlweave.xmlschema.TopLevelElement
@@ -12,7 +13,11 @@ import javax.xml.bind.JAXBElement
 @Service
 class XmlWeaveInteractor : XmlWeaveService {
 
-    override fun getRepresentation(xsdFile: File, rootName: String?): Optional<Element> {
+    override fun renderElementAsXml(e: Element): String {
+        return XmlRenderer().renderAsXml(e)
+    }
+
+    override fun getElementStructure(xsdFile: File, rootName: String?): Optional<Element> {
 
         if (rootName == null || rootName.isBlank()) {
             return Optional.empty()

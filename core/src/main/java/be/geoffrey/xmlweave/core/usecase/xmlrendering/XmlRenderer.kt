@@ -1,4 +1,4 @@
-package be.geoffrey.xmlweave.service
+package be.geoffrey.xmlweave.core.usecase.xmlrendering
 
 import be.geoffrey.xmlweave.core.usecase.Element
 import org.springframework.stereotype.Service
