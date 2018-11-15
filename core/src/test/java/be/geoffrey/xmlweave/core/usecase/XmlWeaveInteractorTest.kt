@@ -37,20 +37,20 @@ class XmlWeaveInteractorTest {
     }
 
     @Test
-    fun simpleComplexTypeShouldBeInterpreted() {
+    fun simpleNonLocalComplexTypeShouldBeInterpreted() {
         val rep = interpretTestFile("3_simple_element_with_non_local_complex_type.xsd", "SimpleBasicElement").get()
         assertThat(rep).isEqualTo(Element("SimpleBasicElement",
                 listOf(Element("elementOne"), Element("elementTwo"))))
     }
 
     @Test
-    fun interpretSimpleElementWithInnerComplexType() {
+    fun simpleElementWithInnerComplexType() {
         val rep = interpretTestFile("4_simple_element_with_local_complex_type_in_child_element.xsd", "SimpleBasicElement").get()
 
-        assertThat(rep.children.contains(Element(name = "SimpleBasicElement")))
-        val firstChild = rep.children.first()
-        assertThat(firstChild).isEqualTo(Element("Child",
-                listOf(Element("elementOne"), Element("elementTwo"))))
+        assertThat(rep).isEqualTo(Element("SimpleBasicElement",
+                listOf(Element("Child",
+                        listOf(Element("elementOne"), Element("elementTwo")))
+                )))
     }
 
     private fun interpretTestFile(fileName: String, rootElement: String): Optional<Element> {
