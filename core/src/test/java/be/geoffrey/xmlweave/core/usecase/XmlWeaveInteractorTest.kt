@@ -39,10 +39,8 @@ class XmlWeaveInteractorTest {
     @Test
     fun simpleComplexTypeShouldBeInterpreted() {
         val rep = interpretTestFile("3_simple_element_with_non_local_complex_type.xsd", "SimpleBasicElement").get()
-
-        assertThat(rep.children
-                .map { it.name })
-                .containsExactly("elementOne", "elementTwo")
+        assertThat(rep).isEqualTo(Element("SimpleBasicElement",
+                listOf(Element("elementOne"), Element("elementTwo"))))
     }
 
     @Test
@@ -60,5 +58,4 @@ class XmlWeaveInteractorTest {
         val sut = XmlWeaveInteractor(SchemaParser())
         return sut.getElementStructure(testFile, rootElement)
     }
-
 }
