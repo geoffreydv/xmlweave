@@ -51,10 +51,8 @@ class XmlWeaveInteractorTest {
 
         assertThat(rep.children.contains(Element(name = "SimpleBasicElement")))
         val firstChild = rep.children.first()
-        assertThat(firstChild).isEqualTo(Element("Child"))
-        assertThat(firstChild.children).hasSize(2)
-        assertThat(firstChild.children).containsExactly(Element("elementOne"), Element("elementTwo"))
-
+        assertThat(firstChild).isEqualTo(Element("Child",
+                listOf(Element("elementOne"), Element("elementTwo"))))
     }
 
     private fun interpretTestFile(fileName: String, rootElement: String): Optional<Element> {

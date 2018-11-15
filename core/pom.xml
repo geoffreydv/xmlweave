@@ -39,7 +39,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <packageName>com.geoffrey.xmlweave.xmlschema</packageName>
+                    <packageName>be.geoffrey.xmlweave.xmlschema</packageName>
                     <sources>
                         <source>src/main/resources</source>
                     </sources>

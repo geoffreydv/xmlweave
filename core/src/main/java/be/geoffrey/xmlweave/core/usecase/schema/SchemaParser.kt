@@ -1,16 +1,17 @@
 package be.geoffrey.xmlweave.core.usecase.schema
 
-import com.geoffrey.xmlweave.xmlschema.Schema
-import com.geoffrey.xmlweave.xmlschema.TopLevelComplexType
-import com.geoffrey.xmlweave.xmlschema.TopLevelElement
+import be.geoffrey.xmlweave.xmlschema.ComplexType
+import be.geoffrey.xmlweave.xmlschema.Schema
+import be.geoffrey.xmlweave.xmlschema.TopLevelComplexType
+import be.geoffrey.xmlweave.xmlschema.TopLevelElement
 import org.springframework.stereotype.Service
 import java.io.File
 import javax.xml.bind.JAXB
 
-data class SchemaMetadata(private val complexTypes: Map<String, TopLevelComplexType>,
+data class SchemaMetadata(private val complexTypes: Map<String, ComplexType>,
                           private val elements: List<TopLevelElement>) {
 
-    fun complexType(name: String): TopLevelComplexType? = complexTypes.get(name)
+    fun complexType(name: String): ComplexType? = complexTypes[name]
 
     fun getElement(name: String): TopLevelElement? = elements.firstOrNull { it -> it.name == name }
 }

@@ -5,7 +5,7 @@ import java.util.*
 
 interface XmlWeaveService {
 
-    fun getElementStructure(xsdFile: File, rootName: String?): Optional<Element>
+    fun getElementStructure(xsdFile: File, elementName: String?): Optional<Element>
 
     fun renderElementAsXml(e: Element): String
 

@@ -2,10 +2,11 @@ package be.geoffrey.xmlweave.core.usecase.element_representation
 
 import be.geoffrey.xmlweave.core.usecase.Element
 import be.geoffrey.xmlweave.core.usecase.XmlWeaveService
+import be.geoffrey.xmlweave.core.usecase.schema.SchemaMetadata
 import be.geoffrey.xmlweave.core.usecase.schema.SchemaParser
 import be.geoffrey.xmlweave.core.usecase.xmlrendering.XmlRenderer
-import com.geoffrey.xmlweave.xmlschema.LocalElement
-
+import be.geoffrey.xmlweave.xmlschema.ComplexType
+import be.geoffrey.xmlweave.xmlschema.LocalElement
 import org.springframework.stereotype.Service
 import java.io.File
 import java.util.*
@@ -18,38 +19,42 @@ class XmlWeaveInteractor(private val parser: SchemaParser) : XmlWeaveService {
         return XmlRenderer().renderAsXml(e)
     }
 
-    override fun getElementStructure(xsdFile: File, rootName: String?): Optional<Element> {
+    override fun getElementStructure(xsdFile: File, elementName: String?): Optional<Element> {
 
-        if (rootName == null || rootName.isBlank()) {
+        if (elementName == null || elementName.isBlank()) {
             return Optional.empty()
         }
 
         val metadata = parser.extractSchemaMetadataFromXsd(xsdFile)
-        val topLevelElement = metadata.getElement(rootName) ?: return Optional.empty()
-
-        if (topLevelElement.type != null) {
-            val complexType = metadata.complexType(topLevelElement.type.localPart)
-            val subElements = complexType?.sequence?.particle ?: return Optional.of(Element(rootName))
-            return Optional.of(Element(rootName, mapJaxbElementsToRepresentation(subElements)))
-        } else {
-            val subElements = topLevelElement.complexType?.sequence?.particle ?: return Optional.of(Element(rootName))
-            return Optional.of(Element(rootName, mapJaxbElementsToRepresentation(subElements)))
-        }
+        val topLevelElement = metadata.getElement(elementName) ?: return Optional.empty()
+        return Optional.of(representElement(topLevelElement, metadata))
     }
 
-    private fun mapJaxbElementsToRepresentation(maybeSubElements: List<Any>): List<Element> {
-        return maybeSubElements
-                .map { it as JAXBElement<*> }
-                .filter { it.value is LocalElement }
-                .map { it.value as LocalElement }
-                .map { it -> representLocalElement(it) }
-    }
+    private fun representElement(element: be.geoffrey.xmlweave.xmlschema.Element,
+                                 metadata: SchemaMetadata): Element {
 
-    private fun representLocalElement(element: LocalElement): Element {
-        if (element.complexType != null) {
-            // Look it up!
+        val elementName = element.name
+
+        if (element.type != null) {
+            val complexType = metadata.complexType(element.type.localPart)
+            val children = extractChildElementsFromComplexType(complexType, metadata)
+            return Element(elementName, children)
+        } else if (element.complexType != null) {
+            val complexType = element.complexType
+            val children = extractChildElementsFromComplexType(complexType, metadata)
+            return Element(elementName, children)
         }
 
         return Element(element.name)
+    }
+
+    private fun extractChildElementsFromComplexType(complexType: ComplexType?,
+                                                    metadata: SchemaMetadata): List<Element> {
+        val subElements = complexType?.sequence?.particle ?: return listOf()
+        return subElements
+                .map { it as JAXBElement<*> }
+                .filter { it.value is LocalElement }
+                .map { it.value as LocalElement }
+                .map { it -> representElement(it, metadata) }
     }
 }
