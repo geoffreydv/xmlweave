@@ -30,10 +30,8 @@ class XmlWeaveInteractorTest {
     @Test
     fun simpleChildElementsShouldBeInterpretedCorrectly() {
         val rep = interpretTestFile("1_simple_element_with_local_complex_type.xsd", "SimpleBasicElement").get()
-
-        assertThat(rep.children
-                .map { it.name })
-                .containsExactly("elementOne", "elementTwo")
+        assertThat(rep).isEqualTo(Element("SimpleBasicElement",
+                listOf(Element("elementOne"), Element("elementTwo"))))
     }
 
     @Test
