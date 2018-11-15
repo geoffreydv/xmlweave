@@ -1,5 +1,7 @@
 package be.geoffrey.xmlweave.core.usecase
 
+import be.geoffrey.xmlweave.core.usecase.element_representation.XmlWeaveInteractor
+import be.geoffrey.xmlweave.core.usecase.schema.SchemaParser
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import java.util.*
@@ -43,9 +45,21 @@ class XmlWeaveInteractorTest {
                 .containsExactly("elementOne", "elementTwo")
     }
 
+    @Test
+    fun interpretSimpleElementWithInnerComplexType() {
+        val rep = interpretTestFile("4_simple_element_with_local_complex_type_in_child_element.xsd", "SimpleBasicElement").get()
+
+        assertThat(rep.children.contains(Element(name = "SimpleBasicElement")))
+        val firstChild = rep.children.first()
+        assertThat(firstChild).isEqualTo(Element("Child"))
+        assertThat(firstChild.children).hasSize(2)
+        assertThat(firstChild.children).containsExactly(Element("elementOne"), Element("elementTwo"))
+
+    }
+
     private fun interpretTestFile(fileName: String, rootElement: String): Optional<Element> {
         val testFile = TestFileReader.readTestFile(fileName)
-        val sut = XmlWeaveInteractor()
+        val sut = XmlWeaveInteractor(SchemaParser())
         return sut.getElementStructure(testFile, rootElement)
     }
 
