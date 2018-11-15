@@ -1,22 +1,22 @@
 package be.geoffrey.xmlweave.core.usecase.choice;
 
-import be.geoffrey.xmlweave.core.usecase.ElementRepresentation;
+import be.geoffrey.xmlweave.core.usecase.Element;
 
 import java.util.List;
 import java.util.Map;
 
 public class Representation {
 
-    private ElementRepresentation rootElement;
+    private Element rootElement;
     private Map<String, List<Choice>> possibleChoices;
 
-    public Representation(ElementRepresentation rootElement,
+    public Representation(Element rootElement,
                           Map<String, List<Choice>> possibleChoices) {
         this.rootElement = rootElement;
         this.possibleChoices = possibleChoices;
     }
 
-    public ElementRepresentation getRootElement() {
+    public Element getRootElement() {
         return rootElement;
     }
 

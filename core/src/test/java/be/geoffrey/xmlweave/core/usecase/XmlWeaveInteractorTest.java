@@ -4,6 +4,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -15,7 +16,7 @@ public class XmlWeaveInteractorTest {
         File testFile = TestFileReader.readTestFile("2_simple_elements.xsd");
 
         XmlWeaveInteractor sut = new XmlWeaveInteractor();
-        Optional<ElementRepresentation> representation = sut.getRepresentation(testFile, "");
+        Optional<Element> representation = sut.getRepresentation(testFile, "");
         assertThat(representation).isNotPresent();
     }
 
@@ -25,7 +26,7 @@ public class XmlWeaveInteractorTest {
         File testFile = TestFileReader.readTestFile("2_simple_elements.xsd");
 
         XmlWeaveInteractor sut = new XmlWeaveInteractor();
-        Optional<ElementRepresentation> representation = sut.getRepresentation(testFile, "SimpleBasicElement");
+        Optional<Element> representation = sut.getRepresentation(testFile, "SimpleBasicElement");
 
         assertThat(representation).isPresent();
         assertThat(representation.get().getName()).isEqualTo("SimpleBasicElement");
@@ -37,29 +38,27 @@ public class XmlWeaveInteractorTest {
         File testFile = TestFileReader.readTestFile("2_simple_elements.xsd");
 
         XmlWeaveInteractor sut = new XmlWeaveInteractor();
-        Optional<ElementRepresentation> representation = sut.getRepresentation(testFile, "Bla");
+        Optional<Element> representation = sut.getRepresentation(testFile, "Bla");
 
         assertThat(representation).isNotPresent();
     }
 
-//    @Test
-//    public void getStructureWithBasicChildElementsShouldReturnCorrectly() {
-//
-//        File testFile = TestFileReader.readTestFile("1_simple_element_with_basic_childs.xsd");
-//
-//        XmlWeaveInteractor sut = new XmlWeaveInteractor();
-//        List<Decision> decisions = new ArrayList<>();
-//        decisions.add(new RootElementDecision("SimpleBasicElement"));
-//
-//        Representation choice = sut.getRepresentation(testFile, decisions);
-//
-//        assertThat(choice.getSubChoices()).hasSize(2);
-//        for (Representation subChoice : choice.getSubChoices()) {
-//            assertThat(subChoice).isExactlyInstanceOf(ElementRepresentation.class);
-//        }
-//        assertThat(choice.getSubChoices())
-//                .extracting("describe")
-//                .containsExactly("elementOne", "elementTwo");
-//    }
+    @Test
+    public void simpleChildElementsShouldBeRenderedCorrectly() {
+
+        File testFile = TestFileReader.readTestFile("1_simple_element_with_basic_childs.xsd");
+
+        XmlWeaveInteractor sut = new XmlWeaveInteractor();
+        Optional<Element> rep = sut.getRepresentation(testFile, "SimpleBasicElement");
+
+        Element element = rep.get();
+
+        assertThat(element.getChildren()).hasSize(2);
+        assertThat(element.getChildren()
+                .stream()
+                .map(Element::getName)
+                .collect(Collectors.toList()))
+                .containsExactly("elementOne", "elementTwo");
+    }
 
 }

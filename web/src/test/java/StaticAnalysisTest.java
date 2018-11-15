@@ -27,10 +27,8 @@ public class StaticAnalysisTest {
 
                 base().mustNotUse(base().allSubOf()); // Nothing in the base package
 
-                service.mayUse(coreUsecase)
-                        .mayUse(service);
-
-                ui.mayUse(coreUsecase);
+                service.mayUse(coreUsecase);
+                ui.mayUse(coreUsecase, service);
             }
         }
 

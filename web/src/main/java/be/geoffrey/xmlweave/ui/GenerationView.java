@@ -1,8 +1,7 @@
 package be.geoffrey.xmlweave.ui;
 
+import be.geoffrey.xmlweave.core.usecase.Element;
 import be.geoffrey.xmlweave.core.usecase.XmlWeaveService;
-import be.geoffrey.xmlweave.core.usecase.ElementRepresentation;
-import be.geoffrey.xmlweave.core.usecase.choice.ElementChoice;
 import be.geoffrey.xmlweave.service.XmlRenderer;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.H1;
@@ -13,7 +12,6 @@ import com.vaadin.flow.router.Route;
 
 import java.io.File;
 import java.util.Optional;
-import java.util.UUID;
 
 @Route("")
 public class GenerationView extends VerticalLayout {
@@ -33,7 +31,7 @@ public class GenerationView extends VerticalLayout {
     private void buildUI() {
 
         TextField fileField = new TextField("File location:");
-        fileField.setValue("C:\\projects\\personal\\experiments\\comparewsdl\\core\\src\\test\\resources\\2_simple_elements.xsd");
+        fileField.setValue("C:\\projects\\roots\\mowesb-fuse\\edelta-connector\\src\\main\\resources\\META-INF\\wsdl\\v18\\Aanbieden\\GeefOpdrachtDienst-05.00\\GeefOpdrachtWsResponse.xsd");
         fileField.setSizeFull();
 
         TextArea generatedCode = new TextArea();
@@ -42,10 +40,11 @@ public class GenerationView extends VerticalLayout {
         generatedCode.setHeight("600px");
 
         TextField rootElementBox = new TextField("Root Element");
+        rootElementBox.setValue("GeefOpdrachtWsResponse");
 
         Button button = new Button("Generate XML");
         button.addClickListener(e -> {
-            Optional<ElementRepresentation> representation = xmlWeaveService.getRepresentation(new File(fileField.getValue()), rootElementBox.getValue());
+            Optional<Element> representation = xmlWeaveService.getRepresentation(new File(fileField.getValue()), rootElementBox.getValue());
 
             if (representation.isPresent()) {
                 generatedCode.setValue(xmlRenderer.renderAsXml(representation.get()));
