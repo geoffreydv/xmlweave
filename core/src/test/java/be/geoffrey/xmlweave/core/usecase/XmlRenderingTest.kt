@@ -9,8 +9,8 @@ class XmlRenderingTest {
     @Test
     fun simpleElementShouldBeRendered() {
         val renderer = XmlRenderer()
-        assertThat(renderer.renderAsXml(Element("Abc"))).isEqualTo("<Abc />")
-        assertThat(renderer.renderAsXml(Element("Element"))).isEqualTo("<Element />")
+        assertThat(renderer.renderAsXml(Element("Abc"))).isEqualTo("<Abc/>")
+        assertThat(renderer.renderAsXml(Element("Element"))).isEqualTo("<Element/>")
     }
 
     @Test
@@ -24,8 +24,26 @@ class XmlRenderingTest {
         assertThat(renderer.renderAsXml(testElement)).isEqualTo(trimmed(
                 """
                 <Hello>
-                    <World />
-                    <Wooooo />
+                    <World/>
+                    <Wooooo/>
+                </Hello>
+                """))
+    }
+
+    @Test
+    fun multiLevelIndentationShouldRenderFine() {
+        val renderer = XmlRenderer()
+        val testElement = Element("Hello", children = listOf(
+                Element("World", listOf(
+                        Element("Test")))
+        ))
+
+        assertThat(renderer.renderAsXml(testElement)).isEqualTo(trimmed(
+                """
+                <Hello>
+                    <World>
+                        <Test/>
+                    </World>
                 </Hello>
                 """))
     }
