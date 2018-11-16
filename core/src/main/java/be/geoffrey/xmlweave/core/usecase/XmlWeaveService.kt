@@ -1,5 +1,6 @@
 package be.geoffrey.xmlweave.core.usecase
 
+import be.geoffrey.xmlweave.core.usecase.element_representation.Element
 import java.io.File
 import java.util.*
 

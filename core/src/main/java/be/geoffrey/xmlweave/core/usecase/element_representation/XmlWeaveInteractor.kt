@@ -1,9 +1,6 @@
 package be.geoffrey.xmlweave.core.usecase.element_representation
 
-import be.geoffrey.xmlweave.core.usecase.Element
 import be.geoffrey.xmlweave.core.usecase.XmlWeaveService
-import be.geoffrey.xmlweave.core.usecase.schema.SchemaMetadata
-import be.geoffrey.xmlweave.core.usecase.schema.SchemaParser
 import be.geoffrey.xmlweave.core.usecase.xmlrendering.XmlRenderer
 import be.geoffrey.xmlweave.xmlschema.ComplexType
 import be.geoffrey.xmlweave.xmlschema.LocalElement

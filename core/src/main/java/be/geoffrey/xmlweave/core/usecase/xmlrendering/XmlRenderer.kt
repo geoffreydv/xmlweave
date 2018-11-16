@@ -1,6 +1,6 @@
 package be.geoffrey.xmlweave.core.usecase.xmlrendering
 
-import be.geoffrey.xmlweave.core.usecase.Element
+import be.geoffrey.xmlweave.core.usecase.element_representation.Element
 import org.springframework.stereotype.Service
 import org.w3c.dom.bootstrap.DOMImplementationRegistry
 import org.w3c.dom.ls.DOMImplementationLS
@@ -33,14 +33,13 @@ class XmlRenderer {
     private fun prettyPrint(xml: String): String {
 
         val src = InputSource(StringReader(xml))
-        val document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(src).getDocumentElement()
+        val document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(src).documentElement
 
         val registry = DOMImplementationRegistry.newInstance()
         val impl = registry.getDOMImplementation("LS") as DOMImplementationLS
-        val writer = impl.createLSSerializer();
-
-        writer.getDomConfig().setParameter("format-pretty-print", true); // Set this to true if the output needs to be beautified.
-        writer.getDomConfig().setParameter("xml-declaration", false); // Set this to true if the declaration is needed to be outputted.
+        val writer = impl.createLSSerializer()
+        writer.domConfig.setParameter("format-pretty-print", true)
+        writer.domConfig.setParameter("xml-declaration", false)
 
         return writer.writeToString(document)
     }

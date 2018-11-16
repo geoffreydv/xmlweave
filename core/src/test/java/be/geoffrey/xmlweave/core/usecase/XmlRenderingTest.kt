@@ -1,5 +1,6 @@
 package be.geoffrey.xmlweave.core.usecase
 
+import be.geoffrey.xmlweave.core.usecase.element_representation.Element
 import be.geoffrey.xmlweave.core.usecase.xmlrendering.XmlRenderer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test

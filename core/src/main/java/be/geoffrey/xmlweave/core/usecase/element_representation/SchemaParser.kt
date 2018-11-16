@@ -1,4 +1,4 @@
-package be.geoffrey.xmlweave.core.usecase.schema
+package be.geoffrey.xmlweave.core.usecase.element_representation
 
 import be.geoffrey.xmlweave.xmlschema.ComplexType
 import be.geoffrey.xmlweave.xmlschema.Schema
