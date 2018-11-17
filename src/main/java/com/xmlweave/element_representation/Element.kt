@@ -4,7 +4,7 @@ data class Element(val name: String,
                    val children: List<Element> = ArrayList(),
                    val attributes: List<Attribute> = ArrayList(),
                    val value: String? = null,
-                   val prefix: String? = null) {
+                   var prefix: String? = null) {
 
     fun isLeaf(): Boolean {
         return children.isEmpty()

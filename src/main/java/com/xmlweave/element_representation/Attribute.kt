@@ -1,3 +1,6 @@
 package com.xmlweave.element_representation
 
-data class Attribute(val s: String, val prefix: String)
+import javax.xml.namespace.QName
+
+data class Attribute(val name: QName,
+                     val value: String)

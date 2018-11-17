@@ -5,6 +5,7 @@ import com.xmlweave.element_representation.XmlWeaveInteractor
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import java.util.*
+import javax.xml.namespace.QName
 
 class XmlWeaveInteractorTest {
 
@@ -57,7 +58,7 @@ class XmlWeaveInteractorTest {
 
         assertThat(rep).isEqualTo(Element("SimpleBasicElement",
                 prefix = "root",
-                attributes = listOf(Attribute("root", prefix = "xmlns"))))
+                attributes = listOf(Attribute(QName("xmlns", "root"), "test-namespace"))))
     }
 
     private fun interpretTestFile(fileName: String, rootElement: String): Optional<Element> {

@@ -4,7 +4,7 @@ import com.xmlweave.xmlrendering.XmlRenderer
 import org.springframework.stereotype.Service
 import java.io.File
 import java.util.*
-import javax.xml.bind.JAXBElement
+import javax.xml.namespace.QName
 
 @Service
 internal class XmlWeaveInteractor(private val xsdFile: XsdFile) : XmlWeaveService {
@@ -22,7 +22,14 @@ internal class XmlWeaveInteractor(private val xsdFile: XsdFile) : XmlWeaveServic
         val metadata = this.xsdFile.parse(xsdFile)
         val topLevelElement = metadata.getElement(elementName) ?: return Optional.empty()
 
-        return Optional.of(representElement(topLevelElement, metadata))
+        val topElement = representElement(topLevelElement, metadata)
+
+        return Optional.of(
+                Element(topElement.name,
+                        topElement.children,
+                        topElement.attributes.plus(Attribute(QName("xmlns", "root"), metadata.namespace!!)),
+                        topElement.value,
+                        "root"))
     }
 
     private fun representElement(element: Element2,
@@ -48,7 +55,7 @@ internal class XmlWeaveInteractor(private val xsdFile: XsdFile) : XmlWeaveServic
         val subElements = complexType?.sequence?.particle ?: return listOf()
         return subElements
                 .filter { it is LocalElement }
-                .map { it as LocalElement}
+                .map { it as LocalElement }
                 .map { it -> representElement(it, metadata) }
     }
 }
