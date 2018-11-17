@@ -1,6 +1,7 @@
+import com.xmlweave.element_representation.Attribute
 import com.xmlweave.element_representation.Element
+import com.xmlweave.element_representation.XsdFile
 import com.xmlweave.element_representation.XmlWeaveInteractor
-import com.xmlweave.element_representation.SchemaParser
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import java.util.*
@@ -50,9 +51,18 @@ class XmlWeaveInteractorTest {
                 )))
     }
 
+    @Test
+    fun rootElementShouldGetTargetNamespaceOfSchemaIfItHasOne() {
+        val rep = interpretTestFile("5_namespace_test.xsd", "SimpleBasicElement").get()
+
+        assertThat(rep).isEqualTo(Element("SimpleBasicElement",
+                prefix = "root",
+                attributes = listOf(Attribute("root", prefix = "xmlns"))))
+    }
+
     private fun interpretTestFile(fileName: String, rootElement: String): Optional<Element> {
         val testFile = TestFileReader.readTestFile(fileName)
-        val sut = XmlWeaveInteractor(SchemaParser())
+        val sut = XmlWeaveInteractor(XsdFile())
         return sut.getElementStructure(testFile, rootElement)
     }
 }

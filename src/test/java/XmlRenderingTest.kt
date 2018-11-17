@@ -8,8 +8,8 @@ class XmlRenderingTest {
     @Test
     fun simpleElementShouldBeRendered() {
         val renderer = XmlRenderer()
-        assertThat(renderer.renderAsXml(Element("Abc"))).isEqualTo("<Abc/>")
-        assertThat(renderer.renderAsXml(Element("Element"))).isEqualTo("<Element/>")
+        assertThat(renderer.renderAsXml(Element("Abc", prefix = "root"))).isEqualTo("<Abc/>")
+        assertThat(renderer.renderAsXml(Element("Element", prefix = "root"))).isEqualTo("<Element/>")
     }
 
     @Test
@@ -17,8 +17,9 @@ class XmlRenderingTest {
         val renderer = XmlRenderer()
         val testElement = Element("Hello",
                 children = listOf(
-                        Element("World"),
-                        Element("Wooooo")))
+                        Element("World", prefix = "root"),
+                        Element("Wooooo", prefix = "root")),
+                prefix = "root")
 
         assertThat(renderer.renderAsXml(testElement)).isEqualTo(trimmed(
                 """
@@ -34,8 +35,8 @@ class XmlRenderingTest {
         val renderer = XmlRenderer()
         val testElement = Element("Hello", children = listOf(
                 Element("World", listOf(
-                        Element("Test")))
-        ))
+                        Element("Test", prefix = "root")), prefix = "root")
+        ), prefix = "root")
 
         assertThat(renderer.renderAsXml(testElement)).isEqualTo(trimmed(
                 """

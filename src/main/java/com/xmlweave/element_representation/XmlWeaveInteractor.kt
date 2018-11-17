@@ -1,15 +1,13 @@
 package com.xmlweave.element_representation
 
 import com.xmlweave.xmlrendering.XmlRenderer
-import com.xmlweave.xmlschema.ComplexType
-import com.xmlweave.xmlschema.LocalElement
 import org.springframework.stereotype.Service
 import java.io.File
 import java.util.*
 import javax.xml.bind.JAXBElement
 
 @Service
-internal class XmlWeaveInteractor(private val parser: SchemaParser) : XmlWeaveService {
+internal class XmlWeaveInteractor(private val xsdFile: XsdFile) : XmlWeaveService {
 
     override fun renderElementAsXml(e: Element): String {
         return XmlRenderer().renderAsXml(e, true)
@@ -21,18 +19,19 @@ internal class XmlWeaveInteractor(private val parser: SchemaParser) : XmlWeaveSe
             return Optional.empty()
         }
 
-        val metadata = parser.extractSchemaMetadataFromXsd(xsdFile)
+        val metadata = this.xsdFile.parse(xsdFile)
         val topLevelElement = metadata.getElement(elementName) ?: return Optional.empty()
+
         return Optional.of(representElement(topLevelElement, metadata))
     }
 
-    private fun representElement(element: com.xmlweave.xmlschema.Element,
-                                 metadata: SchemaMetadata): Element {
+    private fun representElement(element: Element2,
+                                 metadata: Schema): Element {
 
-        val elementName = element.name
+        val elementName = element.name!!
 
         if (element.type != null) {
-            val complexType = metadata.complexType(element.type.localPart)
+            val complexType = metadata.getComplexType(element.type.localPart)
             val children = extractChildElementsFromComplexType(complexType, metadata)
             return Element(elementName, children)
         } else if (element.complexType != null) {
@@ -45,12 +44,11 @@ internal class XmlWeaveInteractor(private val parser: SchemaParser) : XmlWeaveSe
     }
 
     private fun extractChildElementsFromComplexType(complexType: ComplexType?,
-                                                    metadata: SchemaMetadata): List<Element> {
+                                                    metadata: Schema): List<Element> {
         val subElements = complexType?.sequence?.particle ?: return listOf()
         return subElements
-                .map { it as JAXBElement<*> }
-                .filter { it.value is LocalElement }
-                .map { it.value as LocalElement }
+                .filter { it is LocalElement }
+                .map { it as LocalElement}
                 .map { it -> representElement(it, metadata) }
     }
 }

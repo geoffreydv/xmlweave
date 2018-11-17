@@ -6,7 +6,9 @@ import org.w3c.dom.bootstrap.DOMImplementationRegistry
 import org.w3c.dom.ls.DOMImplementationLS
 import org.xml.sax.InputSource
 import java.io.StringReader
+import java.io.StringWriter
 import javax.xml.parsers.DocumentBuilderFactory
+
 
 @Service
 class XmlRenderer {
@@ -37,10 +39,17 @@ class XmlRenderer {
 
         val registry = DOMImplementationRegistry.newInstance()
         val impl = registry.getDOMImplementation("LS") as DOMImplementationLS
+
+        val stringWriter = StringWriter()
+
+        val lsOutput = impl.createLSOutput()
+        lsOutput.encoding = "UTF-8"
+        lsOutput.characterStream = stringWriter
+
         val writer = impl.createLSSerializer()
         writer.domConfig.setParameter("format-pretty-print", true)
         writer.domConfig.setParameter("xml-declaration", xmlDeclaration)
-
-        return writer.writeToString(document)
+        writer.write(document, lsOutput)
+        return stringWriter.toString()
     }
 }
