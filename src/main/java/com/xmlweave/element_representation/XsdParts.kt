@@ -1,5 +1,6 @@
 package com.xmlweave.element_representation
 
+import com.sun.org.apache.xerces.internal.dom.DeferredAttrImpl
 import org.springframework.stereotype.Service
 import org.w3c.dom.Element
 import org.w3c.dom.Node
@@ -7,7 +8,9 @@ import java.io.File
 import javax.xml.namespace.QName
 import javax.xml.parsers.DocumentBuilderFactory
 
-class Schema(private val simpleTypeOrComplexTypeOrGroup: List<OpenAttrs> = listOf()) {
+class Schema(private val simpleTypeOrComplexTypeOrGroup: List<OpenAttrs> = listOf(),
+             val namespace: String? = null,
+             val nsReferences: HashMap<String, String>? = hashMapOf()) {
 
     fun getElement(name: String): TopLevelElement? {
         return simpleTypeOrComplexTypeOrGroup
@@ -51,24 +54,40 @@ class LocalElement(elementName: String? = null,
 @Service
 class XsdFile {
     fun parse(xsdFile: File): Schema {
-
         val docBuilderFactory = DocumentBuilderFactory.newInstance()
         val docBuilder = docBuilderFactory.newDocumentBuilder()
         val document = docBuilder.parse(xsdFile)
+        return parseSchema(document.documentElement)
+    }
 
-        val schema = document.documentElement
+    private fun parseSchema(element: Element): Schema {
+
         val allTopLevelTypes = ArrayList<OpenAttrs>()
 
-        val topLevelElements = childrenByTag(schema, "element")
+        var namespace = ""
+        val nsReferences = HashMap<String, String>()
+
+        for (i in 0 until element.attributes.length) {
+            val attr = element.attributes.item(i) as DeferredAttrImpl
+
+            if (attr.name == "xmlns") {
+                namespace = attr.value
+            } else if (attr.name.startsWith("xmlns")) {
+                val ns = attr.name.split(":").last()
+                nsReferences[ns] = attr.value
+            }
+        }
+
+        val topLevelElements = childrenByTag(element, "element")
                 .map { parseElementDefinition(it, true) }
 
-        val topLevelComplexTypes = childrenByTag(schema, "complexType")
+        val topLevelComplexTypes = childrenByTag(element, "complexType")
                 .map { parseComplexType(it) }
 
         allTopLevelTypes.addAll(topLevelElements)
         allTopLevelTypes.addAll(topLevelComplexTypes)
 
-        return Schema(allTopLevelTypes)
+        return Schema(allTopLevelTypes, namespace, nsReferences)
     }
 
     private fun parseElementDefinition(e: Element, top: Boolean = false): Element2 {
