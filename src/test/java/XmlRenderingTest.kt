@@ -8,8 +8,8 @@ class XmlRenderingTest {
     @Test
     fun simpleElementShouldBeRendered() {
         val renderer = XmlRenderer()
-        assertThat(renderer.renderAsXml(Element("Abc", prefix = "root"))).isEqualTo("<Abc/>")
-        assertThat(renderer.renderAsXml(Element("Element", prefix = "root"))).isEqualTo("<Element/>")
+        assertThat(renderer.renderAsXml(Element("Abc"))).isEqualTo("<Abc/>")
+        assertThat(renderer.renderAsXml(Element("Element"))).isEqualTo("<Element/>")
     }
 
     @Test
@@ -17,9 +17,9 @@ class XmlRenderingTest {
         val renderer = XmlRenderer()
         val testElement = Element("Hello",
                 children = listOf(
-                        Element("World", prefix = "root"),
-                        Element("Wooooo", prefix = "root")),
-                prefix = "root")
+                        Element("World"),
+                        Element("Wooooo"))
+        )
 
         assertThat(renderer.renderAsXml(testElement)).isEqualTo(trimmed(
                 """
@@ -35,8 +35,8 @@ class XmlRenderingTest {
         val renderer = XmlRenderer()
         val testElement = Element("Hello", children = listOf(
                 Element("World", listOf(
-                        Element("Test", prefix = "root")), prefix = "root")
-        ), prefix = "root")
+                        Element("Test")))
+        ))
 
         assertThat(renderer.renderAsXml(testElement)).isEqualTo(trimmed(
                 """
@@ -46,6 +46,21 @@ class XmlRenderingTest {
                     </World>
                 </Hello>
                 """))
+    }
+
+    @Test
+    fun testPrefixRendering() {
+        assertThat(XmlRenderer().renderAsXml(Element("Hoi", prefix = "root")))
+                .isEqualTo(trimmed("""
+                    <root:Hoi/>
+                    """))
+
+        assertThat(XmlRenderer().renderAsXml(Element("Hoi", prefix = "root", children = listOf(Element("placeholder")))))
+                .isEqualTo(trimmed("""
+                    <root:Hoi>
+                        <placeholder/>
+                    </root:Hoi>
+                    """))
     }
 
     private fun trimmed(input: String): String {

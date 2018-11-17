@@ -19,17 +19,22 @@ class XmlRenderer {
 
     private fun renderElement(el: Element): String {
         var representation: String
-
+        
         if (el.isLeaf()) {
-            return "<${el.name} />"
+            return "<${renderTagContent(el.prefix, el.name)} />"
         } else {
-            representation = "<${el.name}>"
+            representation = "<${renderTagContent(el.prefix, el.name)}>"
             for (child in el.children) {
                 representation += renderElement(child)
             }
-            representation += "</${el.name}>"
+            representation += "</${renderTagContent(el.prefix, el.name)}>"
             return representation
         }
+    }
+
+    private fun renderTagContent(prefix: String?, name: String): String {
+        val hasPrefix = prefix?.isNotBlank() ?: false
+        return (if (hasPrefix) prefix.plus(":") else "").plus(name)
     }
 
     private fun prettyPrint(xml: String, xmlDeclaration: Boolean): String {
