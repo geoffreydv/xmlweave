@@ -58,7 +58,7 @@ class XmlWeaveInteractorTest {
 
         assertThat(rep).isEqualTo(Element("SimpleBasicElement",
                 prefix = "root",
-                attributes = listOf(Attribute(QName("xmlns", "root"), "test-namespace"))))
+                attributes = listOf(Attribute(QName("", "root", "xmlns"), "test-namespace"))))
     }
 
     private fun interpretTestFile(fileName: String, rootElement: String): Optional<Element> {

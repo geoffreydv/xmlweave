@@ -24,10 +24,14 @@ internal class XmlWeaveInteractor(private val xsdFile: XsdFile) : XmlWeaveServic
 
         val topElement = representElement(topLevelElement, metadata)
 
+        if (metadata.namespace?.isBlank() == true) {
+            return Optional.of(topElement)
+        }
+
         return Optional.of(
                 Element(topElement.name,
                         topElement.children,
-                        topElement.attributes.plus(Attribute(QName("xmlns", "root"), metadata.namespace!!)),
+                        topElement.attributes.plus(Attribute(QName("", "root", "xmlns"), metadata.namespace!!)),
                         topElement.value,
                         "root"))
     }

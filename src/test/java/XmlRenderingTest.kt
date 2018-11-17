@@ -1,7 +1,9 @@
+import com.xmlweave.element_representation.Attribute
 import com.xmlweave.element_representation.Element
 import com.xmlweave.xmlrendering.XmlRenderer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
+import javax.xml.namespace.QName
 
 class XmlRenderingTest {
 
@@ -60,6 +62,21 @@ class XmlRenderingTest {
                     <root:Hoi>
                         <placeholder/>
                     </root:Hoi>
+                    """))
+    }
+
+    @Test
+    fun testAttributeRenderingCases() {
+
+        // Given
+        val el = Element("Hoi", attributes = listOf(Attribute(QName("", "b", "a"), "woot")))
+
+        // When
+        val output = XmlRenderer().renderAsXml(el)
+
+        // Then
+        assertThat(output).isEqualTo(trimmed("""
+                    <Hoi a:b="woot"/>
                     """))
     }
 

@@ -1,5 +1,6 @@
 package com.xmlweave.xmlrendering
 
+import com.xmlweave.element_representation.Attribute
 import com.xmlweave.element_representation.Element
 import org.springframework.stereotype.Service
 import org.w3c.dom.bootstrap.DOMImplementationRegistry
@@ -7,6 +8,7 @@ import org.w3c.dom.ls.DOMImplementationLS
 import org.xml.sax.InputSource
 import java.io.StringReader
 import java.io.StringWriter
+import javax.xml.namespace.QName
 import javax.xml.parsers.DocumentBuilderFactory
 
 
@@ -19,22 +21,34 @@ class XmlRenderer {
 
     private fun renderElement(el: Element): String {
         var representation: String
-        
-        if (el.isLeaf()) {
-            return "<${renderTagContent(el.prefix, el.name)} />"
+
+        return if (el.isLeaf()) {
+            "<${renderTagContent(el)} ${renderAttributes(el)} />"
         } else {
-            representation = "<${renderTagContent(el.prefix, el.name)}>"
+            representation = "<${renderTagContent(el)} ${renderAttributes(el)}>"
             for (child in el.children) {
                 representation += renderElement(child)
             }
-            representation += "</${renderTagContent(el.prefix, el.name)}>"
-            return representation
+            representation += "</${renderTagContent(el)}>"
+            representation
         }
     }
 
-    private fun renderTagContent(prefix: String?, name: String): String {
-        val hasPrefix = prefix?.isNotBlank() ?: false
-        return (if (hasPrefix) prefix.plus(":") else "").plus(name)
+    private fun renderAttributes(el: Element): String {
+        return el.attributes.joinToString(" ") { renderAttribute(it) }
+    }
+
+    private fun renderAttribute(attribute: Attribute): String {
+        return "${renderQName(attribute.name)}=\"${attribute.value}\""
+    }
+
+    private fun renderQName(name: QName): String {
+        return "${if (name.prefix?.isNotBlank() == true) name.prefix.plus(":") else ""}${name.localPart}"
+    }
+
+    private fun renderTagContent(el: Element): String {
+        val hasPrefix = el.prefix?.isNotBlank() ?: false
+        return (if (hasPrefix) el.prefix.plus(":") else "").plus(el.name)
     }
 
     private fun prettyPrint(xml: String, xmlDeclaration: Boolean): String {

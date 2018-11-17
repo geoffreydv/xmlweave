@@ -116,8 +116,9 @@ class XsdFile {
     private fun interpretName(name: String): QName {
 
         if (name.contains(":")) {
-            val (prefix, localName) = name.split(":")
-            return QName(prefix, localName)
+            val (prefix, localPart) = name.split(":")
+
+            return QName("", localPart, prefix)
         }
 
         return QName("", name)
