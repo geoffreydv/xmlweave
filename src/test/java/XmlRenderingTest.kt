@@ -69,7 +69,7 @@ class XmlRenderingTest {
     fun testAttributeRenderingCases() {
 
         // Given
-        val el = Element("Hoi", attributes = listOf(Attribute(QName("", "b", "a"), "woot")))
+        val el = Element("Hoi", attributes = listOf(Attribute("a:b", "woot")))
 
         // When
         val output = XmlRenderer().renderAsXml(el)

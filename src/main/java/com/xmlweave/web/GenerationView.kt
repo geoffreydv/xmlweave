@@ -6,12 +6,14 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout
 import com.vaadin.flow.component.textfield.TextArea
 import com.vaadin.flow.component.textfield.TextField
 import com.vaadin.flow.router.Route
-import com.xmlweave.element_representation.XmlWeaveService
+import com.xmlweave.element_representation.XsdStructureService
 import com.xmlweave.xmlrendering.XmlRenderer
 import java.io.File
+import javax.xml.namespace.QName
 
 @Route("")
-class GenerationView(private val xmlWeaveService: XmlWeaveService) : VerticalLayout() {
+class GenerationView(private val xsdStructureService: XsdStructureService,
+                     private val xmlRenderer: XmlRenderer) : VerticalLayout() {
 
     init {
         buildUI()
@@ -33,10 +35,10 @@ class GenerationView(private val xmlWeaveService: XmlWeaveService) : VerticalLay
 
         val button = Button("Generate XML")
         button.addClickListener {
-            val representation = xmlWeaveService.getElementStructure(File(fileField.value), rootElementBox.value)
+            val representation = xsdStructureService.getElementStructure(File(fileField.value), QName("http://webservice.geefopdrachtwsdienst-02_00.edelta.mow.vlaanderen.be", rootElementBox.value))
 
             if (representation.isPresent) {
-                generatedCode.value = xmlWeaveService.renderElementAsXml(representation.get())
+                generatedCode.value = xmlRenderer.renderAsXml(representation.get())
             } else {
                 generatedCode.value = "Nothing useful can be rendered."
             }

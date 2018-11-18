@@ -39,11 +39,7 @@ class XmlRenderer {
     }
 
     private fun renderAttribute(attribute: Attribute): String {
-        return "${renderQName(attribute.name)}=\"${attribute.value}\""
-    }
-
-    private fun renderQName(name: QName): String {
-        return "${if (name.prefix?.isNotBlank() == true) name.prefix.plus(":") else ""}${name.localPart}"
+        return "${attribute.name}=\"${attribute.value}\""
     }
 
     private fun renderTagContent(el: Element): String {

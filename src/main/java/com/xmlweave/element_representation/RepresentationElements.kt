@@ -10,3 +10,6 @@ data class Element(val name: String,
         return children.isEmpty()
     }
 }
+
+data class Attribute(val name: String,
+                     val value: String)
