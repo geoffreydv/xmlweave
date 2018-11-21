@@ -1,0 +1,1 @@
+[![](https://codescene.io/projects/3726/status.svg) Get more details at **codescene.io**.](https://codescene.io/projects/3726/jobs/latest-successful/results)
