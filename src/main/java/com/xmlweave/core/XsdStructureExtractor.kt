@@ -1,6 +1,5 @@
-package com.xmlweave.core.element_representation
+package com.xmlweave.core
 
-import com.xmlweave.core.interpret_schema.*
 import java.io.File
 import java.util.*
 import javax.xml.namespace.QName

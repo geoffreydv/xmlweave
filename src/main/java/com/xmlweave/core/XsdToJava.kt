@@ -1,7 +1,6 @@
-package com.xmlweave.core.interpret_schema
+package com.xmlweave.core
 
 import com.sun.org.apache.xerces.internal.dom.DeferredAttrImpl
-import org.springframework.stereotype.Service
 import org.w3c.dom.Element
 import org.w3c.dom.Node
 import java.io.File

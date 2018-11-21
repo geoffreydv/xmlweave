@@ -6,8 +6,8 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout
 import com.vaadin.flow.component.textfield.TextArea
 import com.vaadin.flow.component.textfield.TextField
 import com.vaadin.flow.router.Route
-import com.xmlweave.core.element_representation.XsdStructureExtractor
-import com.xmlweave.core.xmlrendering.XmlRenderer
+import com.xmlweave.core.XsdStructureExtractor
+import com.xmlweave.core.XmlRenderer
 import java.io.File
 import javax.xml.namespace.QName
 

@@ -1,6 +1,6 @@
-import com.xmlweave.core.element_representation.Attribute
-import com.xmlweave.core.element_representation.Element
-import com.xmlweave.core.xmlrendering.XmlRenderer
+import com.xmlweave.core.Attribute
+import com.xmlweave.core.Element
+import com.xmlweave.core.XmlRenderer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 

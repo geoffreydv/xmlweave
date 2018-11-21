@@ -1,7 +1,5 @@
-package com.xmlweave.core.xmlrendering
+package com.xmlweave.core
 
-import com.xmlweave.core.element_representation.Attribute
-import com.xmlweave.core.element_representation.Element
 import org.w3c.dom.bootstrap.DOMImplementationRegistry
 import org.w3c.dom.ls.DOMImplementationLS
 import org.xml.sax.InputSource
