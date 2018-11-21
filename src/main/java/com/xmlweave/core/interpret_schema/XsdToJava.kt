@@ -1,4 +1,4 @@
-package com.xmlweave.element_representation
+package com.xmlweave.core.interpret_schema
 
 import com.sun.org.apache.xerces.internal.dom.DeferredAttrImpl
 import org.springframework.stereotype.Service
@@ -45,8 +45,7 @@ class LocalElement(name: QName? = null,
                    type: QName? = null,
                    complexType: ComplexType? = null) : Element2(name, type, complexType)
 
-@Service
-class XsdFileParser {
+object XsdFileParser {
 
     fun parseSingleXsd(xsdFile: File): XsdFile {
         val docBuilderFactory = DocumentBuilderFactory.newInstance()

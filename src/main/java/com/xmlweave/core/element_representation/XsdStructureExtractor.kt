@@ -1,9 +1,23 @@
-package com.xmlweave.element_representation
+package com.xmlweave.core.element_representation
 
-import org.springframework.stereotype.Service
+import com.xmlweave.core.interpret_schema.*
 import java.io.File
 import java.util.*
 import javax.xml.namespace.QName
+
+data class Element(val name: String,
+                   val children: List<Element> = ArrayList(),
+                   val attributes: List<Attribute> = ArrayList(),
+                   val value: String? = null,
+                   var prefix: String? = null) {
+
+    fun isLeaf(): Boolean {
+        return children.isEmpty()
+    }
+}
+
+data class Attribute(val name: String,
+                     val value: String)
 
 class CollectedInformation(val elements: Map<QName, Element2> = hashMapOf(),
                            val complexTypes: Map<QName, ComplexType> = hashMapOf()) {
@@ -17,10 +31,9 @@ class CollectedInformation(val elements: Map<QName, Element2> = hashMapOf(),
     }
 }
 
-@Service
-internal class XsdStructureServiceImpl(private val xsdFileParser: XsdFileParser) : XsdStructureService {
+object XsdStructureExtractor {
 
-    override fun getElementStructure(xsdFile: File, elementToRender: QName?): Optional<Element> {
+    fun getElementStructure(xsdFile: File, elementToRender: QName?): Optional<Element> {
 
         if (elementToRender == null) {
             return Optional.empty()
@@ -50,7 +63,7 @@ internal class XsdStructureServiceImpl(private val xsdFileParser: XsdFileParser)
     private fun parseXsdFileAndReferencesToOtherFiles(xsdFile: File,
                                                       collectedInformation: CollectedInformation): CollectedInformation {
 
-        val xsdItems = this.xsdFileParser.parseSingleXsd(xsdFile)
+        val xsdItems = XsdFileParser.parseSingleXsd(xsdFile)
 
         val updatedMetadata = CollectedInformation(
                 collectedInformation.elements.plus(xsdItems.simpleTypeOrComplexTypeOrGroup

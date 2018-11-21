@@ -1,29 +1,26 @@
-import com.xmlweave.element_representation.Attribute
-import com.xmlweave.element_representation.Element
-import com.xmlweave.xmlrendering.XmlRenderer
+import com.xmlweave.core.element_representation.Attribute
+import com.xmlweave.core.element_representation.Element
+import com.xmlweave.core.xmlrendering.XmlRenderer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
-import javax.xml.namespace.QName
 
 class XmlRenderingTest {
 
     @Test
     fun simpleElementShouldBeRendered() {
-        val renderer = XmlRenderer()
-        assertThat(renderer.renderAsXml(Element("Abc"))).isEqualTo("<Abc/>")
-        assertThat(renderer.renderAsXml(Element("Element"))).isEqualTo("<Element/>")
+        assertThat(XmlRenderer.renderAsXml(Element("Abc"))).isEqualTo("<Abc/>")
+        assertThat(XmlRenderer.renderAsXml(Element("Element"))).isEqualTo("<Element/>")
     }
 
     @Test
     fun simpleElementWithChildrenShouldBeRendered() {
-        val renderer = XmlRenderer()
         val testElement = Element("Hello",
                 children = listOf(
                         Element("World"),
                         Element("Wooooo"))
         )
 
-        assertThat(renderer.renderAsXml(testElement)).isEqualTo(trimmed(
+        assertThat(XmlRenderer.renderAsXml(testElement)).isEqualTo(trimmed(
                 """
                 <Hello>
                     <World/>
@@ -34,13 +31,12 @@ class XmlRenderingTest {
 
     @Test
     fun multiLevelIndentationShouldRenderFine() {
-        val renderer = XmlRenderer()
         val testElement = Element("Hello", children = listOf(
                 Element("World", listOf(
                         Element("Test")))
         ))
 
-        assertThat(renderer.renderAsXml(testElement)).isEqualTo(trimmed(
+        assertThat(XmlRenderer.renderAsXml(testElement)).isEqualTo(trimmed(
                 """
                 <Hello>
                     <World>
@@ -52,12 +48,12 @@ class XmlRenderingTest {
 
     @Test
     fun testPrefixRendering() {
-        assertThat(XmlRenderer().renderAsXml(Element("Hoi", prefix = "root")))
+        assertThat(XmlRenderer.renderAsXml(Element("Hoi", prefix = "root")))
                 .isEqualTo(trimmed("""
                     <root:Hoi/>
                     """))
 
-        assertThat(XmlRenderer().renderAsXml(Element("Hoi", prefix = "root", children = listOf(Element("placeholder")))))
+        assertThat(XmlRenderer.renderAsXml(Element("Hoi", prefix = "root", children = listOf(Element("placeholder")))))
                 .isEqualTo(trimmed("""
                     <root:Hoi>
                         <placeholder/>
@@ -72,7 +68,7 @@ class XmlRenderingTest {
         val el = Element("Hoi", attributes = listOf(Attribute("a:b", "woot")))
 
         // When
-        val output = XmlRenderer().renderAsXml(el)
+        val output = XmlRenderer.renderAsXml(el)
 
         // Then
         assertThat(output).isEqualTo(trimmed("""
@@ -83,5 +79,4 @@ class XmlRenderingTest {
     private fun trimmed(input: String): String {
         return input.trimIndent()
     }
-
 }

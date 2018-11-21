@@ -1,13 +1,13 @@
-import com.xmlweave.element_representation.Attribute
-import com.xmlweave.element_representation.Element
-import com.xmlweave.element_representation.XsdFileParser
-import com.xmlweave.element_representation.XsdStructureServiceImpl
+import com.xmlweave.core.element_representation.Attribute
+import com.xmlweave.core.element_representation.Element
+import com.xmlweave.core.interpret_schema.XsdFileParser
+import com.xmlweave.core.element_representation.XsdStructureExtractor
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import java.util.*
 import javax.xml.namespace.QName
 
-class XsdStructureServiceImplTest {
+class XsdStructureExtractorTest {
 
     @Test
     fun chooseInitialElementWithNoOptionsShouldNotReturnAnything() {
@@ -70,7 +70,6 @@ class XsdStructureServiceImplTest {
 
     private fun interpretTestFile(fileName: String, rootElement: QName?): Optional<Element> {
         val testFile = TestFileReader.readTestFile(fileName)
-        val sut = XsdStructureServiceImpl(XsdFileParser())
-        return sut.getElementStructure(testFile, rootElement)
+        return XsdStructureExtractor.getElementStructure(testFile, rootElement)
     }
 }

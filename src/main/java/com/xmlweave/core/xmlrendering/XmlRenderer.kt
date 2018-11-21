@@ -1,19 +1,15 @@
-package com.xmlweave.xmlrendering
+package com.xmlweave.core.xmlrendering
 
-import com.xmlweave.element_representation.Attribute
-import com.xmlweave.element_representation.Element
-import org.springframework.stereotype.Service
+import com.xmlweave.core.element_representation.Attribute
+import com.xmlweave.core.element_representation.Element
 import org.w3c.dom.bootstrap.DOMImplementationRegistry
 import org.w3c.dom.ls.DOMImplementationLS
 import org.xml.sax.InputSource
 import java.io.StringReader
 import java.io.StringWriter
-import javax.xml.namespace.QName
 import javax.xml.parsers.DocumentBuilderFactory
 
-
-@Service
-class XmlRenderer {
+object XmlRenderer {
 
     fun renderAsXml(el: Element, xmlDeclaration: Boolean = false): String {
         return prettyPrint(renderElement(el), xmlDeclaration).trim()

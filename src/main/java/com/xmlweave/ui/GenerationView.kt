@@ -1,4 +1,4 @@
-package com.xmlweave.web
+package com.xmlweave.ui
 
 import com.vaadin.flow.component.button.Button
 import com.vaadin.flow.component.html.H1
@@ -6,14 +6,13 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout
 import com.vaadin.flow.component.textfield.TextArea
 import com.vaadin.flow.component.textfield.TextField
 import com.vaadin.flow.router.Route
-import com.xmlweave.element_representation.XsdStructureService
-import com.xmlweave.xmlrendering.XmlRenderer
+import com.xmlweave.core.element_representation.XsdStructureExtractor
+import com.xmlweave.core.xmlrendering.XmlRenderer
 import java.io.File
 import javax.xml.namespace.QName
 
 @Route("")
-class GenerationView(private val xsdStructureService: XsdStructureService,
-                     private val xmlRenderer: XmlRenderer) : VerticalLayout() {
+class GenerationView() : VerticalLayout() {
 
     init {
         buildUI()
@@ -35,10 +34,10 @@ class GenerationView(private val xsdStructureService: XsdStructureService,
 
         val button = Button("Generate XML")
         button.addClickListener {
-            val representation = xsdStructureService.getElementStructure(File(fileField.value), QName("http://webservice.geefopdrachtwsdienst-02_00.edelta.mow.vlaanderen.be", rootElementBox.value))
+            val representation = XsdStructureExtractor.getElementStructure(File(fileField.value), QName("http://webservice.geefopdrachtwsdienst-02_00.edelta.mow.vlaanderen.be", rootElementBox.value))
 
             if (representation.isPresent) {
-                generatedCode.value = xmlRenderer.renderAsXml(representation.get())
+                generatedCode.value = XmlRenderer.renderAsXml(representation.get())
             } else {
                 generatedCode.value = "Nothing useful can be rendered."
             }
